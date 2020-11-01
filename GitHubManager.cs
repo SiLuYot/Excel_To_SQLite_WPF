@@ -57,7 +57,7 @@ namespace Excel_To_SQLite_WPF
 
         public const string OWNER = "SiLuYot";
         public const string REPO_NAME = "my_data_repository";
-        public const string BASE_DATA_PATH = "data";
+        public const string BASE_DATA_PATH = REPO_NAME + "_data";
         public const string VERSION_FILE_PATH = BASE_DATA_PATH + "/version.txt";
 
         public async Task<string> GetCurrentUser(string id, string password)
