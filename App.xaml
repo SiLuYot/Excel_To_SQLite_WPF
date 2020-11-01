@@ -1,7 +1,7 @@
-﻿<Application x:Class="GithubExcel2SQLiteTool.App"
+﻿<Application x:Class="Excel_To_SQLite_WPF.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:GithubExcel2SQLiteTool"
+             xmlns:local="clr-namespace:Excel_To_SQLite_WPF"
              StartupUri="window/LogInWindow.xaml">
     <Application.Resources>
          

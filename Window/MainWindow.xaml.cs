@@ -8,7 +8,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace GithubExcel2SQLiteTool
+namespace Excel_To_SQLite_WPF
 {
     public partial class MainWindow : Window, INotifyPropertyChanged
     {

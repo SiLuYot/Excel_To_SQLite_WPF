@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace GithubExcel2SQLiteTool
+namespace Excel_To_SQLite_WPF
 {
     public partial class LogInWindow : Window, INotifyPropertyChanged
     {

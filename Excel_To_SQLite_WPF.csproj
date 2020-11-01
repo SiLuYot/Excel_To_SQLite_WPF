@@ -7,8 +7,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{91C760CE-1C0A-4FAF-BF70-059444459AC9}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>GithubExcel2SQLiteTool</RootNamespace>
-    <AssemblyName>GithubExcel2SQLiteTool</AssemblyName>
+    <RootNamespace>Excel_To_SQLite_WPF</RootNamespace>
+    <AssemblyName>Excel_To_SQLite_WPF</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>

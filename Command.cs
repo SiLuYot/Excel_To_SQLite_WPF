@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace GithubExcel2SQLiteTool
+namespace Excel_To_SQLite_WPF
 {
     public class Command : ICommand
     {

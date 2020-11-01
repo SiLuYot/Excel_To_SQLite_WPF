@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 
-namespace GithubExcel2SQLiteTool
+namespace Excel_To_SQLite_WPF
 {
     public class Version
     {

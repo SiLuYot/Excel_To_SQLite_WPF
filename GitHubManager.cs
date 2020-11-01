@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GithubExcel2SQLiteTool
+namespace Excel_To_SQLite_WPF
 {
     public class GitHubManager
     {
