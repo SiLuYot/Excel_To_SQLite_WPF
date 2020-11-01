@@ -1,0 +1,33 @@
+﻿<Window x:Class="GithubExcel2SQLiteTool.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GithubExcel2SQLiteTool"
+        mc:Ignorable="d"
+        Title="Excel To SQLite" Height="480" Width="640">
+    <Grid Background="#FF2D2D30">
+
+        <Border BorderBrush="White" BorderThickness="1" HorizontalAlignment="Right" Width="134" Margin="0,10,10,72" Background="#FF1E1E1E"/>
+
+        <Label Content="Excel List" Margin="10,10,471,0" Height="36" VerticalAlignment="Top" FontSize="14" FontWeight="Bold" Foreground="White"/>
+        <Label Content="Option" Margin="0,95,82,0" Height="31" VerticalAlignment="Top" FontWeight="Bold" FontSize="14" HorizontalAlignment="Right" Width="60" Foreground="White"/>
+
+        <Label Content="LogIn" Margin="0,11,82,0" Height="36" VerticalAlignment="Top" FontWeight="Bold" FontSize="18" HorizontalAlignment="Right" Width="62" Foreground="White" Background="{x:Null}"/>
+        <Label Content="{Binding UserName}" Margin="0,47,18,0" Height="30" VerticalAlignment="Top" FontSize="14" HorizontalAlignment="Right" Width="120" Foreground="White" FontWeight="Bold" Background="#FF424242"/>
+
+        <CheckBox Content="Use Multi Sheet" Margin="0,126,25,0" Name="isMultiSheet" HorizontalAlignment="Right" Width="113" Height="21" VerticalAlignment="Top" Foreground="White"/>
+
+        <Button Content="Open Excel File" Margin="0,0,18,212" Click="OpenButtonClick" Height="57" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="120" Background="#FF252526" Foreground="White" FontWeight="Bold"/>
+        <Button Content="Excel to SQLite" Margin="0,0,18,150" Click="ExcelToSQLiteButtonClick" Height="57" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="120" Background="#FF252526" Foreground="White" FontWeight="Bold"/>
+        <Button Content="Upload to Github" Margin="0,0,18,88" Height="57" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="120" Click="UploadButtonClick" FontWeight="Bold" Background="#FF252526" Foreground="White"/>
+
+        <Label Content="{Binding Label}" Margin="10,0,0,35" Height="32" VerticalAlignment="Bottom" FontWeight="Bold" Foreground="White" HorizontalAlignment="Left"/>
+        <ProgressBar Value="{Binding CurrentProgress}" Margin="10,0,10,5" Height="30" VerticalAlignment="Bottom" Background="#FF686868" />
+        <Label Content="{Binding ErrorLabel}" Margin="10,0,10,5" Height="30" VerticalAlignment="Bottom" Foreground="Red" Background="#00000000" FontWeight="Bold"/>
+
+        <ListBox Margin="10,36,159,72" Name="excelList" Background="#FF1E1E1E" Foreground="White"/>
+
+
+    </Grid>
+</Window>
