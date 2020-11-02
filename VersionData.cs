@@ -56,16 +56,23 @@ namespace Excel_To_SQLite_WPF
             versionDic = new Dictionary<string, Version>();
         }
 
-        public Version AddVerionData(string keyValueInfo)
+        public void AddVerionData(string infoString)
         {
-            if (keyValueInfo == string.Empty)
-                return null;
+            if (infoString == string.Empty)
+                return;
 
-            var split = keyValueInfo.Split('_');
-            var fileName = split[0];
-            var fileVersion = split[1];
+            var infoArray = infoString.Split('/');
+            foreach (var info in infoArray)
+            {
+                if (info != string.Empty)
+                {
+                    var split = info.Split('_');
+                    var fileName = split[0];
+                    var fileVersion = split[1];
 
-            return AddNewVerionData(fileName, fileVersion);
+                    AddNewVerionData(fileName, fileVersion);
+                }               
+            }
         }
 
         public Version AddNewVerionData(string fileName, string version = "-1")

@@ -96,12 +96,7 @@ namespace Excel_To_SQLite_WPF
                 var existingFile = await Client.Repository.Content.GetAllContentsByRef(OWNER, REPO_NAME, VERSION_FILE_PATH, ReferenceName);
 
                 var versionInfo = existingFile.First().Content;
-                var infoArray = versionInfo.Split('/');
-
-                foreach (var info in infoArray)
-                {
-                    versionData.AddVerionData(info);
-                }
+                versionData.AddVerionData(versionInfo);
             }
             catch (NotFoundException)
             {
