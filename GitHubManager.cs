@@ -77,9 +77,7 @@ namespace Excel_To_SQLite_WPF
         private bool isUnity = false;
 
         public const string OWNER = "SiLuYot";
-        public const string REPO_NAME = "CurlingArena";
-        //public const string BASE_DATA_PATH = REPO_NAME + "_data";
-        //public const string VERSION_FILE_PATH = BASE_DATA_PATH + "/version.txt";
+        public const string REPO_NAME = "my_data_repository";
 
         public void SetUnityPath(bool isUnity)
         {
