@@ -55,10 +55,36 @@ namespace Excel_To_SQLite_WPF
             }
         }
 
+        public string BaseDataPath
+        {
+            get
+            {
+                if (isUnity)
+                    return "Assets/StreamingAssets/" + REPO_NAME + "_data";
+                else
+                    return REPO_NAME + "_data";
+            }
+        }
+
+        public string VersionDataPath
+        {
+            get
+            {
+                return BaseDataPath + "/version.txt";
+            }
+        }
+
+        private bool isUnity = false;
+
         public const string OWNER = "SiLuYot";
-        public const string REPO_NAME = "my_data_repository";
-        public const string BASE_DATA_PATH = REPO_NAME + "_data";
-        public const string VERSION_FILE_PATH = BASE_DATA_PATH + "/version.txt";
+        public const string REPO_NAME = "CurlingArena";
+        //public const string BASE_DATA_PATH = REPO_NAME + "_data";
+        //public const string VERSION_FILE_PATH = BASE_DATA_PATH + "/version.txt";
+
+        public void SetUnityPath(bool isUnity)
+        {
+            this.isUnity = isUnity;
+        }
 
         public async Task<string> GetCurrentUser(string id, string password)
         {
@@ -93,7 +119,7 @@ namespace Excel_To_SQLite_WPF
                 GetRepository = await Client.Repository.Get(OWNER, REPO_NAME);
 
                 updateLabel?.Invoke("Check Version Data..");
-                var existingFile = await Client.Repository.Content.GetAllContentsByRef(OWNER, REPO_NAME, VERSION_FILE_PATH, ReferenceName);
+                var existingFile = await Client.Repository.Content.GetAllContentsByRef(OWNER, REPO_NAME, VersionDataPath, ReferenceName);
 
                 var versionInfo = existingFile.First().Content;
                 versionData.AddVerionData(versionInfo);
@@ -115,19 +141,19 @@ namespace Excel_To_SQLite_WPF
             try
             {
                 updateLabel?.Invoke("Check Version Data..");
-                var existingFile = await Client.Repository.Content.GetAllContentsByRef(OWNER, REPO_NAME, VERSION_FILE_PATH, ReferenceName);
+                var existingFile = await Client.Repository.Content.GetAllContentsByRef(OWNER, REPO_NAME, VersionDataPath, ReferenceName);
 
                 var updateFileRequest = new UpdateFileRequest("update version", versionData.ToString(), existingFile.First().Sha, DefaultBranch);
 
                 updateLabel?.Invoke("Update Version Data..");
-                var updateChangeSet = await Client.Repository.Content.UpdateFile(OWNER, REPO_NAME, VERSION_FILE_PATH, updateFileRequest);
+                var updateChangeSet = await Client.Repository.Content.UpdateFile(OWNER, REPO_NAME, VersionDataPath, updateFileRequest);
             }
             catch (Octokit.NotFoundException)
             {
                 var createFileRequest = new CreateFileRequest("create version", versionData.ToString(), DefaultBranch);
 
                 updateLabel?.Invoke("Create Version Data..");
-                var createChangeSet = await Client.Repository.Content.CreateFile(OWNER, REPO_NAME, VERSION_FILE_PATH, createFileRequest);
+                var createChangeSet = await Client.Repository.Content.CreateFile(OWNER, REPO_NAME, VersionDataPath, createFileRequest);
             }
         }
 
@@ -183,7 +209,7 @@ namespace Excel_To_SQLite_WPF
 
                     var newTreeItem = new NewTreeItem
                     {
-                        Path = string.Format("{0}/{1}/{2}/{3}", BASE_DATA_PATH, fileExtension, fileName, fileFullName),
+                        Path = string.Format("{0}/{1}/{2}/{3}", BaseDataPath, fileExtension, fileName, fileFullName),
                         Mode = "100644",
                         Type = TreeType.Blob,
                         Sha = newBlobRef.Sha

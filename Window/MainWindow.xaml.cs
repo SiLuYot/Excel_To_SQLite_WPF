@@ -363,6 +363,9 @@ namespace Excel_To_SQLite_WPF
             {
                 StartWork("Upload Start!");
 
+                if (isUnity.IsChecked == true)
+                    GitHubManager.Instance.SetUnityPath(true);
+
                 string msg = string.Empty;
 
                 Action<string> updateLabel = (str) => Label = str;

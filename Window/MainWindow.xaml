@@ -16,7 +16,8 @@
         <Label Content="LogIn" Margin="0,11,82,0" Height="36" VerticalAlignment="Top" FontWeight="Bold" FontSize="18" HorizontalAlignment="Right" Width="62" Foreground="White" Background="{x:Null}"/>
         <Label Content="{Binding UserName}" Margin="0,47,18,0" Height="30" VerticalAlignment="Top" FontSize="14" HorizontalAlignment="Right" Width="120" Foreground="White" FontWeight="Bold" Background="#FF424242"/>
 
-        <CheckBox Content="Use Multi Sheet" Margin="0,126,25,0" Name="isMultiSheet" HorizontalAlignment="Right" Width="113" Height="21" VerticalAlignment="Top" Foreground="White"/>
+        <CheckBox Content="Use Unity" Margin="0,126,25,0" Name="isUnity" HorizontalAlignment="Right" Width="113" Height="21" VerticalAlignment="Top" Foreground="White"/>
+        <CheckBox Content="Use Multi Sheet" Margin="0,147,25,0" Name="isMultiSheet" HorizontalAlignment="Right" Width="113" Height="21" VerticalAlignment="Top" Foreground="White"/>
 
         <Button Content="Open Excel File" Margin="0,0,18,212" Click="OpenButtonClick" Height="57" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="120" Background="#FF252526" Foreground="White" FontWeight="Bold"/>
         <Button Content="Excel to SQLite" Margin="0,0,18,150" Click="ExcelToSQLiteButtonClick" Height="57" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="120" Background="#FF252526" Foreground="White" FontWeight="Bold"/>
