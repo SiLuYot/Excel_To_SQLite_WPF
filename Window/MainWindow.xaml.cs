@@ -1,4 +1,5 @@
-﻿using ExcelDataReader;
+﻿using Excel_To_SQLite_WPF.GitRespositoryManager;
+using ExcelDataReader;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -70,7 +71,8 @@ namespace Excel_To_SQLite_WPF
             this.DataContext = this;
             this.Loaded += (sender, e) =>
             {
-                UserName = GitHubManager.Instance.GetUser.Name;
+                //UserName = GitHubManager.Instance.GetUser.Login;
+                UserName = RespositoryManager.GetManager().GetUserName;
             };
         }
 
@@ -140,7 +142,7 @@ namespace Excel_To_SQLite_WPF
                                 string[] fieldName = null;
                                 insertQuery.Clear();
 
-                                if (isMultiSheet.IsChecked == true)
+                                if (isMultiSheet.IsChecked.Value)
                                 {
                                     sheetCount += 1;
                                     dbName = string.Format("{0}{1}", fileName, sheetCount);
@@ -345,61 +347,35 @@ namespace Excel_To_SQLite_WPF
         private async void UploadButtonClick(object sender, RoutedEventArgs e)
         {
             if (excelFileArray == null)
-            {
                 return;
-            }
 
             if (dbFileList.Count <= 0)
-            {
                 return;
-            }
 
             if (isWorking)
-            {
                 return;
-            }
 
-            if (GitHubManager.Instance.IsGetUserSuccess)
+            var instance = RespositoryManager.GetManager();
+            if (instance.IsGetUserSuccess)
             {
                 StartWork("Upload Start!");
-
-                if (isUnity.IsChecked == true)
-                    GitHubManager.Instance.SetUnityPath(true);
-
-                string msg = string.Empty;
 
                 Action<string> updateLabel = (str) => Label = str;
                 Action<float, float> updateProgress = (v1, v2) => CurrentProgress = (int)((v1 / v2) * 100.0f);
 
-                var versionData = await GitHubManager.Instance.GetVersionFile(excelFileArray, updateLabel);
+                instance.SetUnityPath(isUnity.IsChecked.Value);
 
-                msg = string.Empty;
-                msg = await GitHubManager.Instance.Commit_Base64(
-                    excelFileArray,
-                    versionData,
-                    updateLabel,
-                    updateProgress);
+                var versionData = await instance.GetVersionFile(excelFileArray, updateLabel);
 
-                if (msg != string.Empty)
-                {
-                    ErrorLabel = msg;
-                    MessageBox.Show(this, "upload excel error", "", MessageBoxButton.OK);
-                }
-
-                msg = string.Empty;
-                msg = await GitHubManager.Instance.Commit_Base64(
-                    dbFileList.ToArray(),
-                    versionData,
-                    updateLabel,
-                    updateProgress);
+                var msg = await instance.CommitProcess(
+                    excelFileArray, dbFileList.ToArray(), 
+                    versionData, updateLabel, updateProgress);
 
                 if (msg != string.Empty)
                 {
                     ErrorLabel = msg;
-                    MessageBox.Show(this, "upload db error", "", MessageBoxButton.OK);
+                    MessageBox.Show(this, "upload error", "", MessageBoxButton.OK);
                 }
-
-                await GitHubManager.Instance.UploadVersionFile(versionData, updateLabel);
 
                 EndWork("Upload Done!");
             }

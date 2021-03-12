@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using Excel_To_SQLite_WPF.GitRespositoryManager;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -34,7 +35,7 @@ namespace Excel_To_SQLite_WPF
         {
             get
             {
-                return (connectCommand) ?? (connectCommand = new Command(ConnectCommandExecute));
+                return connectCommand ?? (connectCommand = new Command(ConnectCommandExecute));
             }
         }
 
@@ -43,13 +44,16 @@ namespace Excel_To_SQLite_WPF
         public LogInWindow()
         {
             InitializeComponent();
+
+            //RespositoryManager.SetManager(new GitHubManager());
+            RespositoryManager.SetManager(new BitbucketManager());
+
             this.DataContext = this;
             this.Loaded += (sender, e) =>
             {
-                Info = string.Format(
-                    " {0}\n" + " {1}",
-                    GitHubManager.OWNER,
-                    GitHubManager.REPO_NAME);
+                Info = string.Format(" {0}\n" + " {1}",
+                    RespositoryManager.GetManager().OwnerSpaceName,
+                    RespositoryManager.GetManager().RepositoryName);
             };
         }
 
@@ -63,10 +67,11 @@ namespace Excel_To_SQLite_WPF
 
             if (password == string.Empty)
                 return;
+            
+            var instance = RespositoryManager.GetManager();
 
-            var msg = await GitHubManager.Instance.GetCurrentUser(ID, password);
-
-            if (GitHubManager.Instance.IsGetUserSuccess)
+            var msg = await instance.GetCurrentUser(ID, password);
+            if (instance.IsGetUserSuccess)
             {
                 MainWindow mainWindow = new MainWindow();
                 mainWindow.Show();
@@ -75,6 +80,14 @@ namespace Excel_To_SQLite_WPF
                 this.Close();
             }
             else MessageBox.Show(this, msg, "", MessageBoxButton.OK);
+        }
+
+        private void TextBox_Password_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                ConnectCommandExecute(TextBox_Password);
+            }
         }
     }
 

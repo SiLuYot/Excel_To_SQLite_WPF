@@ -5,20 +5,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"        
         xmlns:local="clr-namespace:Excel_To_SQLite_WPF"
         mc:Ignorable="d"
-        Title="GitHub LogIn" Height="189.333" Width="350" ResizeMode="CanMinimize" Foreground="#FF2D2D30">
+        Title="LogIn" Height="195.833" Width="324.667" ResizeMode="CanMinimize" Foreground="#FF2D2D30">
     <Grid Background="#FF2D2D30">
 
         <Label Content="ID" HorizontalAlignment="Left" Margin="15,26,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White"/>
         <Label Content="Password" HorizontalAlignment="Left" Margin="15,57,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White"/>
 
-        <TextBlock Text="{Binding Info}" Margin="15,97,18,10" TextWrapping="Wrap" Foreground="White" FontSize="14" Background="#FF3E3E42" TextDecorations="{x:Null}"/>
+        <TextBlock Text="{Binding Info}" Margin="15,98,10,10" TextWrapping="Wrap" Foreground="White" FontSize="14" Background="#FF3E3E42" TextDecorations="{x:Null}"/>
 
         <TextBox Name="TextBox_ID" HorizontalAlignment="Left" Height="23" Margin="89,26,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="135"
                  Text="{Binding ID}" Foreground="White" Background="#FF1E1E1E"/>
 
-        <PasswordBox Name="TextBox_Password" HorizontalAlignment="Left" Margin="89,57,0,0" VerticalAlignment="Top" Width="135" Height="24" Background="#FF1E1E1E" Foreground="White" FontSize="11"/>
+        <PasswordBox Name="TextBox_Password" KeyDown="TextBox_Password_KeyDown" HorizontalAlignment="Left" Margin="89,57,0,0" VerticalAlignment="Top" Width="135" Height="24" Background="#FF1E1E1E" Foreground="White" FontSize="11"/>
 
-        <Button Name="ConnectButton" Content="Connect" Margin="242,26,18,0" 
+        <Button Name="ConnectButton" Content="Connect" Margin="236,26,10,0" 
                 Foreground="White" Background="#FF252526" FontWeight="Bold"
                 Command="{Binding Path=ConnectCommand}" CommandParameter="{Binding ElementName=TextBox_Password}" Height="55" VerticalAlignment="Top"/>
 
