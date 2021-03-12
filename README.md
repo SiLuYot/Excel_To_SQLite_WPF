@@ -4,4 +4,4 @@
 * data upload test - https://github.com/SiLuYot/my_data_repository
 
 2021/03/12
-* Add Bitbuck / RestSharp
+* Add Bitbucket / RestSharp
