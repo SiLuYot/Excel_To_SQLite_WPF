@@ -41,6 +41,8 @@ namespace Excel_To_SQLite_WPF
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        private bool isWorking;
+
         public LogInWindow()
         {
             InitializeComponent();
@@ -55,10 +57,16 @@ namespace Excel_To_SQLite_WPF
                     RespositoryManager.GetManager().OwnerSpaceName,
                     RespositoryManager.GetManager().RepositoryName);
             };
+            this.isWorking = false;
         }
 
         private async void ConnectCommandExecute(object parameter)
         {
+            if (isWorking)
+                return;
+
+            isWorking = true;
+
             var passwordBox = parameter as PasswordBox;
             var password = passwordBox.Password;
 
@@ -71,6 +79,9 @@ namespace Excel_To_SQLite_WPF
             var instance = RespositoryManager.GetManager();
 
             var msg = await instance.GetCurrentUser(ID, password);
+
+            isWorking = false;
+
             if (instance.IsGetUserSuccess)
             {
                 MainWindow mainWindow = new MainWindow();
