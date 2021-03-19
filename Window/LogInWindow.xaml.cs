@@ -47,8 +47,8 @@ namespace Excel_To_SQLite_WPF
         {
             InitializeComponent();
 
-            //RespositoryManager.SetManager(new GitHubManager());
-            RespositoryManager.SetManager(new BitbucketManager());
+            RespositoryManager.SetManager(new GitHubManager());
+            //RespositoryManager.SetManager(new BitbucketManager());
 
             this.DataContext = this;
             this.Loaded += (sender, e) =>

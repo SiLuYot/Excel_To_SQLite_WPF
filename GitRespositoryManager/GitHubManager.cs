@@ -27,8 +27,11 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager
 
         public override async Task<string> GetCurrentUser(string id, string password)
         {
-            var newCredentials = new Credentials(id, password);
+            //Deprecating password authentication
+            //https://developer.github.com/changes/2020-02-14-deprecating-password-auth/
+            //var newCredentials = new Credentials(string id, string password);
 
+            var newCredentials = new Credentials("your_personal_access_tokens");
             Client.Credentials = newCredentials;
 
             try

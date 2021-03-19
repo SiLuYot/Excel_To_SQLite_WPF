@@ -1,7 +1,7 @@
 # Excel_To_SQLite_WPF
  
-* ExcelDataReader / Octokit / SQLite / WPF
-* data upload test - https://github.com/SiLuYot/my_data_repository
+* ExcelDataReader / Octokit / RestSharp / sqlite-net-sqlcipher / WPF
 
-2021/03/12
-* Add Bitbucket / RestSharp
+* data upload test
+github      - https://github.com/SiLuYot/my_data_repository
+bitbucket   - https://bitbucket.org/siluyot/test/src/master
