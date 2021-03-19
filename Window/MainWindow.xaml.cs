@@ -1,10 +1,10 @@
 ﻿using Excel_To_SQLite_WPF.GitRespositoryManager;
 using ExcelDataReader;
 using Microsoft.Win32;
+using SQLite;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data.SQLite;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
@@ -71,7 +71,6 @@ namespace Excel_To_SQLite_WPF
             this.DataContext = this;
             this.Loaded += (sender, e) =>
             {
-                //UserName = GitHubManager.Instance.GetUser.Login;
                 UserName = RespositoryManager.GetManager().GetUserName;
             };
         }
@@ -122,14 +121,19 @@ namespace Excel_To_SQLite_WPF
                         var dbFilePath = string.Format("{0}/{1}.db", dbPath, fileName);
                         dbFileList.Add(dbFilePath);
 
-                        SQLiteConnection.CreateFile(dbFilePath);
-                        conn = new SQLiteConnection(string.Format("Data Source={0};Version=3;", dbFilePath));
-                        conn.Open();
+                        var options = new SQLiteConnectionString(dbFilePath,
+                           SQLiteOpenFlags.Create |
+                           SQLiteOpenFlags.FullMutex |
+                           SQLiteOpenFlags.ReadWrite,
+                           true,
+                           key: "your_password");
+
+                        conn = new SQLiteConnection(options);
 
                         using (var reader = ExcelReaderFactory.CreateReader(stream))
                         {
                             int sheetCount = 0;
-                            List<string> insertQuery = new List<string>();
+                            var insertQuery = new List<string>();
 
                             do
                             {
@@ -180,7 +184,7 @@ namespace Excel_To_SQLite_WPF
                                     }
                                 }
 
-                                loadingCountMax = loadingCount;
+                                loadingCountMax = loadingCount + 1;
                                 loadingCount = 0;
 
                                 await Task.Run(() =>
@@ -188,11 +192,14 @@ namespace Excel_To_SQLite_WPF
                                     //테이블 생성 실행
                                     ExecuteCreateTableQuery(conn, dbName, createTableQuery);
 
+                                    //테이블 데이터 모두 삭제
+                                    conn.Execute(string.Format("DELETE FROM {0}", dbName));
+
                                     //데이터 삽입 실행
                                     ExecuteInsertQuery(conn, dbName, insertQuery);
                                 });
 
-                            } while (isMultiSheet.IsChecked == true && reader.NextResult()); //다음 시트로 이동
+                            } while (isMultiSheet.IsChecked.Value && reader.NextResult()); //다음 시트로 이동
                         }
 
                         conn.Close();
@@ -271,8 +278,11 @@ namespace Excel_To_SQLite_WPF
         {
             Label = string.Format("Create {0} Table", dbName);
 
-            var sql = string.Format("CREATE TABLE {0} ({1})", dbName, createTableHolders);
-            var command = new SQLiteCommand(sql, conn);
+            var sql = string.Format("CREATE TABLE IF NOT EXISTS {0} ({1})", dbName, createTableHolders);
+            var command = new SQLiteCommand(conn)
+            {
+                CommandText = sql
+            };
 
             var result = command.ExecuteNonQuery();
 
@@ -287,7 +297,10 @@ namespace Excel_To_SQLite_WPF
                 Label = string.Format("Insert {0}", query);
 
                 var sql = string.Format("INSERT INTO {0} VALUES {1}", dbName, query);
-                var command = new SQLiteCommand(sql, conn);
+                var command = new SQLiteCommand(conn)
+                {
+                    CommandText = sql
+                };
 
                 var result = command.ExecuteNonQuery();
 
@@ -368,7 +381,7 @@ namespace Excel_To_SQLite_WPF
                 var versionData = await instance.GetVersionFile(excelFileArray, updateLabel);
 
                 var msg = await instance.CommitProcess(
-                    excelFileArray, dbFileList.ToArray(), 
+                    excelFileArray, dbFileList.ToArray(),
                     versionData, updateLabel, updateProgress);
 
                 if (msg != string.Empty)

@@ -61,12 +61,7 @@ namespace Excel_To_SQLite_WPF
         }
 
         private async void ConnectCommandExecute(object parameter)
-        {
-            if (isWorking)
-                return;
-
-            isWorking = true;
-
+        {           
             var passwordBox = parameter as PasswordBox;
             var password = passwordBox.Password;
 
@@ -75,7 +70,12 @@ namespace Excel_To_SQLite_WPF
 
             if (password == string.Empty)
                 return;
-            
+
+            if (isWorking)
+                return;
+
+            isWorking = true;
+
             var instance = RespositoryManager.GetManager();
 
             var msg = await instance.GetCurrentUser(ID, password);

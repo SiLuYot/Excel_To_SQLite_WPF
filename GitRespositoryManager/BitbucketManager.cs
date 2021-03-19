@@ -37,7 +37,7 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager
     }
 
     public class BitbucketManager : RespositoryManager
-    {                
+    {
         private RestClient client = null;
         public RestClient Client => client ?? (client = new RestClient("https://api.bitbucket.org/2.0/"));
 
@@ -57,7 +57,7 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager
         private string hash = string.Empty;
 
         float awaitCount = 0;
-        float awaitMaxCount = 0;        
+        float awaitMaxCount = 0;
 
         public override string OwnerSpaceName => "siluyot";
         public override string RepositoryName => "test";
@@ -157,6 +157,12 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager
             {
                 var fileName = Path.GetFileNameWithoutExtension(path);
                 var fileExtension = Path.GetExtension(path);
+
+                var curVersion = versionData.GetVersionValue(fileName);
+                if (curVersion == null)
+                {
+                    curVersion = versionData.AddNewVerionData(fileName);
+                }
 
                 var fileVersionName = versionData.GetNextVersion(fileName);
                 var fileFullName = string.Format("{0}{1}", fileVersionName, fileExtension);
