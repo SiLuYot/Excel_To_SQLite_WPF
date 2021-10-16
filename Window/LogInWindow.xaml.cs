@@ -1,5 +1,6 @@
 ﻿using Excel_To_SQLite_WPF.GitRespositoryManager;
 using System.ComponentModel;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -56,12 +57,23 @@ namespace Excel_To_SQLite_WPF
                 Info = string.Format(" {0}\n" + " {1}",
                     RespositoryManager.GetManager().OwnerSpaceName,
                     RespositoryManager.GetManager().RepositoryName);
+
+                var fileInfo = new FileInfo(".save");
+                if (fileInfo.Exists)
+                {
+                    var file = fileInfo.OpenText();
+                    var str = file.ReadToEnd();
+                    var array = str.Split('/');
+
+                    ID = array[0];
+                    TextBox_Password.Password = array[1];
+                }
             };
             this.isWorking = false;
         }
 
         private async void ConnectCommandExecute(object parameter)
-        {           
+        {
             var passwordBox = parameter as PasswordBox;
             var password = passwordBox.Password;
 
@@ -77,13 +89,25 @@ namespace Excel_To_SQLite_WPF
             isWorking = true;
 
             var instance = RespositoryManager.GetManager();
-
             var msg = await instance.GetCurrentUser(ID, password);
 
             isWorking = false;
 
             if (instance.IsGetUserSuccess)
             {
+                if (RememberCheckBox.IsChecked.Value)
+                {
+                    var fileInfo = new FileInfo(".save");
+                    if (fileInfo.Exists)
+                    {
+                        fileInfo.Delete();
+                    }
+
+                    var file = fileInfo.CreateText();
+                    file.Write(ID + "/" + password);
+                    file.Close();
+                }
+
                 MainWindow mainWindow = new MainWindow();
                 mainWindow.Show();
                 mainWindow.Focus();
@@ -101,6 +125,4 @@ namespace Excel_To_SQLite_WPF
             }
         }
     }
-
-
 }

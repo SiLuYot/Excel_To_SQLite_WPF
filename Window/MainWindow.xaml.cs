@@ -143,7 +143,9 @@ namespace Excel_To_SQLite_WPF
                                 string dbName = fileName;
                                 string createTableQuery = string.Empty;
 
-                                string[] fieldName = null;
+                                int fieldCount = 0;
+                                string[] fieldName = null;                                
+
                                 insertQuery.Clear();
 
                                 if (isMultiSheet.IsChecked.Value)
@@ -162,9 +164,18 @@ namespace Excel_To_SQLite_WPF
 
                                     //필드 이름 세팅
                                     if (reader.Depth == 0)
-                                    {
-                                        fieldName = new string[reader.FieldCount];
+                                    {                                        
+                                        //필드 검증 (데이터가 없는데 필드로 잡힌 경우가 있었음..)
                                         for (int i = 0; i < reader.FieldCount; i++)
+                                        {
+                                            if (reader.GetString(i) != null)
+                                            {
+                                                fieldCount++;
+                                            }                                            
+                                        }
+
+                                        fieldName = new string[fieldCount];                                        
+                                        for (int i = 0; i < fieldCount; i++)
                                         {
                                             fieldName[i] = reader.GetString(i);
                                         }
@@ -174,12 +185,12 @@ namespace Excel_To_SQLite_WPF
                                         if (createTableQuery == string.Empty)
                                         {
                                             //create table 쿼리 작성
-                                            createTableQuery = GetCreateTableQuery(reader, fieldName);
+                                            createTableQuery = GetCreateTableQuery(reader, fieldName, fieldCount);
                                             loadingCount++;
                                         }
 
                                         //insert 쿼리 작성                                    
-                                        insertQuery.Add(GetInsertQuery(reader));
+                                        insertQuery.Add(GetInsertQuery(reader, fieldCount));
                                         loadingCount++;
                                     }
                                 }
@@ -234,11 +245,11 @@ namespace Excel_To_SQLite_WPF
             return dbPath;
         }
 
-        private string GetCreateTableQuery(IExcelDataReader reader, string[] fieldName)
+        private string GetCreateTableQuery(IExcelDataReader reader, string[] fieldName, int fieldCount)
         {
             string query = string.Empty;
 
-            for (int i = 0; i < reader.FieldCount; i++)
+            for (int i = 0; i < fieldCount; i++)
             {
                 if (query != string.Empty)
                 {
@@ -258,10 +269,10 @@ namespace Excel_To_SQLite_WPF
             return query;
         }
 
-        private string GetInsertQuery(IExcelDataReader reader)
+        private string GetInsertQuery(IExcelDataReader reader, int fieldCount)
         {
             string query = "(";
-            for (int i = 0; i < reader.FieldCount; i++)
+            for (int i = 0; i < fieldCount; i++)
             {
                 if (query.Contains(")"))
                 {
@@ -274,20 +285,49 @@ namespace Excel_To_SQLite_WPF
             return query;
         }
 
-        private void ExecuteCreateTableQuery(SQLiteConnection conn, string dbName, string createTableHolders)
+        private void ExecuteCreateTable(SQLiteConnection conn, string dbName, string createTableHolders)
         {
             Label = string.Format("Create {0} Table", dbName);
-
-            var sql = string.Format("CREATE TABLE IF NOT EXISTS {0} ({1})", dbName, createTableHolders);
+            
+            var sql = string.Format("CREATE TABLE {0} ({1})", dbName, createTableHolders);
             var command = new SQLiteCommand(conn)
             {
                 CommandText = sql
             };
 
-            var result = command.ExecuteNonQuery();
+            command.ExecuteNonQuery();
+        }
 
-            loadingCount++;
-            CurrentProgress = (int)((loadingCount / loadingCountMax) * 100.0f);
+        private void ExecuteDropTable(SQLiteConnection conn, string dbName)
+        {
+            Label = string.Format("Drop {0} Table", dbName);
+
+            var sql = string.Format("DROP TABLE {0}", dbName);
+            var command = new SQLiteCommand(conn)
+            {
+                CommandText = sql
+            };
+
+            command.ExecuteNonQuery();
+        }
+
+        private void ExecuteCreateTableQuery(SQLiteConnection conn, string dbName, string createTableHolders)
+        {
+            try
+            {
+                ExecuteCreateTable(conn, dbName, createTableHolders);
+            }
+            catch
+            {
+                //실패시 테이블 드랍하고 다시만듬
+                ExecuteDropTable(conn, dbName);
+                ExecuteCreateTable(conn, dbName, createTableHolders);
+            }
+            finally
+            {
+                loadingCount++;
+                CurrentProgress = (int)((loadingCount / loadingCountMax) * 100.0f);
+            }                        
         }
 
         private void ExecuteInsertQuery(SQLiteConnection conn, string dbName, List<string> insertQuery)
@@ -366,7 +406,7 @@ namespace Excel_To_SQLite_WPF
                 return;
 
             if (isWorking)
-                return;
+                return;            
 
             var instance = RespositoryManager.GetManager();
             if (instance.IsGetUserSuccess)
@@ -391,6 +431,41 @@ namespace Excel_To_SQLite_WPF
                 }
 
                 EndWork("Upload Done!");
+            }
+        }
+
+        private async void ClearOldFIleClick(object sender, RoutedEventArgs e)
+        {
+            if (isWorking)
+                return;
+
+            var result = MessageBox.Show("이 기능을 실행하면 최신버전 이외의 데이터들이 모두 삭제됩니다.\n진행하시겠습니까?", "경고", MessageBoxButton.YesNo);
+            if (!(result == MessageBoxResult.Yes))
+                return;
+
+            ErrorLabel = string.Empty;
+
+            var instance = RespositoryManager.GetManager();
+            if (instance.IsGetUserSuccess)
+            {
+                StartWork("Clear Start!");
+
+                Action<string> updateLabel = (str) => Label = str;
+                Action<float, float> updateProgress = (v1, v2) => CurrentProgress = (int)((v1 / v2) * 100.0f);
+
+                instance.SetUnityPath(isUnity.IsChecked.Value);
+
+                var versionData = await instance.GetVersionFile(excelFileArray, updateLabel);
+
+                var msg = await instance.ClearProcess(versionData, updateLabel, updateProgress);
+
+                if (msg != string.Empty)
+                {
+                    ErrorLabel = msg;
+                    MessageBox.Show(this, "clear error", "", MessageBoxButton.OK);
+                }
+
+                EndWork("Clear Done!");
             }
         }
     }

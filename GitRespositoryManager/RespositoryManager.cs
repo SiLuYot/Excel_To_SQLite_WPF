@@ -28,9 +28,17 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager
             get
             {
                 if (isUnity)
-                    return "Assets/StreamingAssets/" + RepositoryName + "_data";
+                    return "Assets/StreamingAssets/" + DataDirectoryName;
                 else
-                    return RepositoryName + "_data";
+                    return DataDirectoryName;
+            }
+        }
+
+        protected string DataDirectoryName
+        {
+            get
+            {
+                return RepositoryName + "_data";
             }
         }
 
@@ -55,5 +63,7 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager
         public abstract Task<VersionData> GetVersionFile(string[] fileArray, Action<string> updateLabel);
 
         public abstract Task<string> CommitProcess(string[] excelFileArray, string[] dbFileArray, VersionData versionData, Action<string> updateLabel, Action<float, float> updateProgress);
+
+        public abstract Task<string> ClearProcess(VersionData versionData, Action<string> updateLabel, Action<float, float> updateProgress);
     }
 }

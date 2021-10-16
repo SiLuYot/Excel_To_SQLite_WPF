@@ -11,7 +11,7 @@
         <Label Content="ID" HorizontalAlignment="Left" Margin="15,26,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White"/>
         <Label Content="Password" HorizontalAlignment="Left" Margin="15,57,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White"/>
 
-        <TextBlock Text="{Binding Info}" Margin="15,98,10,10" TextWrapping="Wrap" Foreground="White" FontSize="14" Background="#FF3E3E42" TextDecorations="{x:Null}"/>
+        <TextBlock Text="{Binding Info}" Margin="15,102,116,10" TextWrapping="Wrap" Foreground="White" FontSize="14" Background="#FF3E3E42" TextDecorations="{x:Null}"/>
 
         <TextBox Name="TextBox_ID" HorizontalAlignment="Left" Height="23" Margin="89,26,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="135"
                  Text="{Binding ID}" Foreground="White" Background="#FF1E1E1E"/>
@@ -22,6 +22,7 @@
                 Foreground="White" Background="#FF252526" FontWeight="Bold"
                 Command="{Binding Path=ConnectCommand}" CommandParameter="{Binding ElementName=TextBox_Password}" Height="55" VerticalAlignment="Top"/>
 
+        <CheckBox Name="RememberCheckBox" Content="Remember Me" Margin="0,102,10,0" Foreground="White" VerticalAlignment="Top" Height="20" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" HorizontalAlignment="Right" Width="101"/>
 
     </Grid>
 </Window>

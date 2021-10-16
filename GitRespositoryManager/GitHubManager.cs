@@ -88,6 +88,11 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager
             return sb.ToString();
         }
 
+        public override Task<string> ClearProcess(VersionData versionData, Action<string> updateLabel, Action<float, float> updateProgress)
+        {
+            return null;
+        }
+
         public async Task UploadVersionFile(VersionData versionData, Action<string> updateLabel)
         {
             try
