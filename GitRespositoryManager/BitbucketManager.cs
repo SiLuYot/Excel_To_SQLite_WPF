@@ -272,7 +272,7 @@ namespace Excel_To_SQLite_WPF.Repository
                     var version = int.Parse(array[1]);
                     do
                     {
-                        //이번 버전 파일들이 있는지 체크
+                        //이전 버전 파일들이 있는지 체크
                         version -= 1;
 
                         var fileFullName = string.Format("{0}_{1}.{2}", name, version, extension);

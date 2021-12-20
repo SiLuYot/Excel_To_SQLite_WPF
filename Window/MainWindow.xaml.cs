@@ -433,7 +433,7 @@ namespace Excel_To_SQLite_WPF
             }
         }
 
-        private async void ClearOldFIleClick(object sender, RoutedEventArgs e)
+        private async void ClearOldFileClick(object sender, RoutedEventArgs e)
         {
             if (isWorking)
                 return;
