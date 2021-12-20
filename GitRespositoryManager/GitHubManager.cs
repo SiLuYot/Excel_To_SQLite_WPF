@@ -77,9 +77,12 @@ namespace Excel_To_SQLite_WPF.Repository
         public override async Task<string> CommitProcess(string[] excelArray, string[] dbArray, VersionData versionData, Action<string> updateLabel, Action<float, float> updateProgress)
         {
             var sb = new StringBuilder();
-
             var pathArray = excelArray.Concat(dbArray);
+
             var newTreeItemList = await CreateNewTreeItemList(sb, pathArray, versionData);
+            var newVersionTreeItem = await CreateNewVersionTreeItem(sb, versionData);
+
+            newTreeItemList.Add(newVersionTreeItem);
 
             return await CommitNewTreeItem(newTreeItemList, sb, updateLabel, updateProgress);
         }
@@ -130,29 +133,30 @@ namespace Excel_To_SQLite_WPF.Repository
                 sb.AppendFormat(" {0} /", fileFullName);
             }
 
-            {
-                sb.Append(" Update version");
-
-                var newBlob = new NewBlob
-                {
-                    Encoding = EncodingType.Utf8,
-                    Content = versionData.ToString()
-                };
-
-                var newBlobRef = await Client.Git.Blob.Create(OwnerSpaceName, RepositoryName, newBlob);
-
-                var newTreeItem = new NewTreeItem
-                {
-                    Path = VersionDataPath,
-                    Mode = "100644",
-                    Type = TreeType.Blob,
-                    Sha = newBlobRef.Sha
-                };
-
-                newTreeItemList.Add(newTreeItem);
-            }
-
             return newTreeItemList;
+        }
+
+        private async Task<NewTreeItem> CreateNewVersionTreeItem(StringBuilder sb, VersionData versionData)
+        {
+            sb.Append(" Update version");
+
+            var newBlob = new NewBlob
+            {
+                Encoding = EncodingType.Utf8,
+                Content = versionData.ToString()
+            };
+
+            var newBlobRef = await Client.Git.Blob.Create(OwnerSpaceName, RepositoryName, newBlob);
+
+            var newTreeItem = new NewTreeItem
+            {
+                Path = VersionDataPath,
+                Mode = "100644",
+                Type = TreeType.Blob,
+                Sha = newBlobRef.Sha
+            };
+
+            return newTreeItem;
         }
 
         private async Task<string> CommitNewTreeItem(List<NewTreeItem> list, StringBuilder sb, Action<string> updateLabel, Action<float, float> updateProgress)
