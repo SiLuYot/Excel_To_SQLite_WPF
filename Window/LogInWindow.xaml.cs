@@ -1,4 +1,4 @@
-﻿using Excel_To_SQLite_WPF.GitRespositoryManager;
+﻿using Excel_To_SQLite_WPF.Repository;
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
@@ -48,15 +48,15 @@ namespace Excel_To_SQLite_WPF
         {
             InitializeComponent();
 
-            RespositoryManager.SetManager(new GitHubManager());
-            //RespositoryManager.SetManager(new BitbucketManager());
+            RepoTypeCombo.Items.Add("Github");
+            RepoTypeCombo.Items.Add("Bitbucket");
 
             this.DataContext = this;
             this.Loaded += (sender, e) =>
             {
                 Info = string.Format(" {0}\n" + " {1}",
-                    RespositoryManager.GetManager().OwnerSpaceName,
-                    RespositoryManager.GetManager().RepositoryName);
+                    RepositoryManager.GetManager().OwnerSpaceName,
+                    RepositoryManager.GetManager().RepositoryName);
 
                 var fileInfo = new FileInfo(".save");
                 if (fileInfo.Exists)
@@ -67,6 +67,7 @@ namespace Excel_To_SQLite_WPF
 
                     ID = array[0];
                     TextBox_Password.Password = array[1];
+                    RepoTypeCombo.SelectedIndex = int.Parse(array[2]);
                 }
             };
             this.isWorking = false;
@@ -88,7 +89,7 @@ namespace Excel_To_SQLite_WPF
 
             isWorking = true;
 
-            var instance = RespositoryManager.GetManager();
+            var instance = RepositoryManager.GetManager();
             var msg = await instance.GetCurrentUser(ID, password);
 
             isWorking = false;
@@ -104,7 +105,7 @@ namespace Excel_To_SQLite_WPF
                     }
 
                     var file = fileInfo.CreateText();
-                    file.Write(ID + "/" + password);
+                    file.Write(ID + "/" + password + "/" + RepoTypeCombo.SelectedIndex);
                     file.Close();
                 }
 
@@ -122,6 +123,18 @@ namespace Excel_To_SQLite_WPF
             if (e.Key == Key.Enter)
             {
                 ConnectCommandExecute(TextBox_Password);
+            }
+        }
+
+        private void RepoTypeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (RepoTypeCombo.SelectedIndex == 0)
+            {
+                RepositoryManager.SetManager(new GitHubManager());
+            }
+            else if (RepoTypeCombo.SelectedIndex == 1)
+            {
+                RepositoryManager.SetManager(new BitbucketManager());
             }
         }
     }

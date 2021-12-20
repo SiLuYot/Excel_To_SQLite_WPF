@@ -6,11 +6,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Excel_To_SQLite_WPF.GitRespositoryManager
+namespace Excel_To_SQLite_WPF.Repository
 {
     public class UploadFileObject
     {
@@ -56,7 +55,7 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager
         }
     }
 
-    public class BitbucketManager : RespositoryManager
+    public class BitbucketManager : RepositoryManager
     {
         private RestClient client = null;
         public RestClient Client => client ?? (client = new RestClient("https://api.bitbucket.org/2.0/"));
@@ -195,10 +194,9 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager
                 var fileName = Path.GetFileNameWithoutExtension(path);
                 var fileExtension = Path.GetExtension(path);
 
-                var curVersion = versionData.GetVersionValue(fileName);
-                if (curVersion == null)
+                if (versionData.GetVersionValue(fileName) == null)
                 {
-                    curVersion = versionData.AddNewVerionData(fileName);
+                    versionData.AddNewVerionData(fileName);
                 }
 
                 var fileVersionName = versionData.GetNextVersion(fileName);
@@ -294,7 +292,7 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager
         }
 
         public async Task<string> PushCommit(int basicAwaitCount,
-            Func<Action<string>, Action<float, float>, Task<string>> requestCommit, 
+            Func<Action<string>, Action<float, float>, Task<string>> requestCommit,
             Action<string> updateLabel, Action<float, float> updateProgress)
         {
             awaitCount = 0;

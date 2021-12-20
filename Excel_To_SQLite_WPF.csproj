@@ -117,7 +117,7 @@
     <Compile Include="GitRespositoryManager\BitbucketManager.cs" />
     <Compile Include="Command.cs" />
     <Compile Include="GitRespositoryManager\GitHubManager.cs" />
-    <Compile Include="GitRespositoryManager\RespositoryManager.cs" />
+    <Compile Include="GitRespositoryManager\RepositoryManager.cs" />
     <Compile Include="Window\LogInWindow.xaml.cs">
       <DependentUpon>LogInWindow.xaml</DependentUpon>
     </Compile>

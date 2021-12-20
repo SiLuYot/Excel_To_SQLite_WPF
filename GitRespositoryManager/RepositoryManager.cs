@@ -1,19 +1,19 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace Excel_To_SQLite_WPF.GitRespositoryManager
+namespace Excel_To_SQLite_WPF.Repository
 {
-    public abstract class RespositoryManager
+    public abstract class RepositoryManager
     {
-        private static RespositoryManager instance;
+        private static RepositoryManager instance;
         protected bool isUnity = false;
 
-        public static void SetManager(RespositoryManager instance)
+        public static void SetManager(RepositoryManager instance)
         {
-            RespositoryManager.instance = instance;
+            RepositoryManager.instance = instance;
         }
 
-        public static RespositoryManager GetManager()
+        public static RepositoryManager GetManager()
         {
             return instance;
         }

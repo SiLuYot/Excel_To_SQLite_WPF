@@ -1,13 +1,14 @@
 ﻿using Octokit;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Excel_To_SQLite_WPF.GitRespositoryManager
+namespace Excel_To_SQLite_WPF.Repository
 {
-    public class GitHubManager : RespositoryManager
+    public class GitHubManager : RepositoryManager
     {
         private GitHubClient client = null;
         public GitHubClient Client => client ?? (client = new GitHubClient(new ProductHeaderValue("Octokit")));
@@ -16,7 +17,7 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager
         public override string GetUserName => GetUser.Name;
 
         public User GetUser { get; private set; }
-        public Repository GetRepository { get; private set; }
+        public Octokit.Repository GetRepository { get; private set; }
 
         public string DefaultBranch => GetRepository?.DefaultBranch;
 
@@ -31,7 +32,7 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager
             //https://developer.github.com/changes/2020-02-14-deprecating-password-auth/
             //var newCredentials = new Credentials(string id, string password);
 
-            var newCredentials = new Credentials("your_personal_access_tokens");
+            var newCredentials = new Credentials("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");
             Client.Credentials = newCredentials;
 
             try
@@ -73,19 +74,15 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager
             return versionData;
         }
 
-        public override async Task<string> CommitProcess(string[] excelFileArray, string[] dbFileArray, VersionData versionData, Action<string> updateLabel, Action<float, float> updateProgress)
+        public override async Task<string> CommitProcess(string[] excelArray, string[] dbArray, VersionData versionData, Action<string> updateLabel, Action<float, float> updateProgress)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
-            var excelMsg = await Commit_Base64(excelFileArray, versionData, updateLabel, updateProgress);
-            sb.Append(excelMsg);
+            var pathArray = excelArray.Concat(dbArray);
 
-            var dbMsg = await Commit_Base64(dbFileArray, versionData, updateLabel, updateProgress);
-            sb.Append(dbMsg);
+            var newTreeItemList = await CreateNewTreeItemList(sb, pathArray, versionData);
 
-            await UploadVersionFile(versionData, updateLabel);
-
-            return sb.ToString();
+            return await CommitNewTreeItem(newTreeItemList, sb, updateLabel, updateProgress);
         }
 
         public override Task<string> ClearProcess(VersionData versionData, Action<string> updateLabel, Action<float, float> updateProgress)
@@ -93,34 +90,76 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager
             return null;
         }
 
-        public async Task UploadVersionFile(VersionData versionData, Action<string> updateLabel)
+        private async Task<List<NewTreeItem>> CreateNewTreeItemList(StringBuilder sb, IEnumerable<string> pathArray, VersionData versionData)
         {
-            try
+            var newTreeItemList = new List<NewTreeItem>();
+            sb.Append("[Update Data] ");
+
+            foreach (var path in pathArray)
             {
-                updateLabel?.Invoke("Check Version Data..");
-                var existingFile = await Client.Repository.Content.GetAllContentsByRef(OwnerSpaceName, RepositoryName, VersionDataPath, ReferenceName);
+                var fileName = Path.GetFileNameWithoutExtension(path);
+                var fileExtension = Path.GetExtension(path);
 
-                var updateFileRequest = new UpdateFileRequest("update version", versionData.ToString(), existingFile.First().Sha, DefaultBranch);
+                if (versionData.GetVersionValue(fileName) == null)
+                {
+                    versionData.AddNewVerionData(fileName);
+                }
+                var fileVersionName = versionData.GetNextVersion(fileName);
 
-                updateLabel?.Invoke("Update Version Data..");
-                var updateChangeSet = await Client.Repository.Content.UpdateFile(OwnerSpaceName, RepositoryName, VersionDataPath, updateFileRequest);
+                var fileFullName = string.Format("{0}{1}", fileVersionName, fileExtension);
+
+                fileExtension = fileExtension.Replace(".", "");
+
+                var fileToBase64 = Convert.ToBase64String(File.ReadAllBytes(path));
+                var newBlob = new NewBlob
+                {
+                    Encoding = EncodingType.Base64,
+                    Content = fileToBase64
+                };
+
+                var newBlobRef = await Client.Git.Blob.Create(OwnerSpaceName, RepositoryName, newBlob);
+
+                var newTreeItem = new NewTreeItem
+                {
+                    Path = string.Format("{0}/{1}/{2}/{3}", BaseDataPath, fileExtension, fileName, fileFullName),
+                    Mode = "100644",
+                    Type = TreeType.Blob,
+                    Sha = newBlobRef.Sha
+                };
+
+                newTreeItemList.Add(newTreeItem);
+                sb.AppendFormat(" {0} /", fileFullName);
             }
-            catch (Octokit.NotFoundException)
+
             {
-                var createFileRequest = new CreateFileRequest("create version", versionData.ToString(), DefaultBranch);
+                sb.Append(" Update version");
 
-                updateLabel?.Invoke("Create Version Data..");
-                var createChangeSet = await Client.Repository.Content.CreateFile(OwnerSpaceName, RepositoryName, VersionDataPath, createFileRequest);
+                var newBlob = new NewBlob
+                {
+                    Encoding = EncodingType.Utf8,
+                    Content = versionData.ToString()
+                };
+
+                var newBlobRef = await Client.Git.Blob.Create(OwnerSpaceName, RepositoryName, newBlob);
+
+                var newTreeItem = new NewTreeItem
+                {
+                    Path = VersionDataPath,
+                    Mode = "100644",
+                    Type = TreeType.Blob,
+                    Sha = newBlobRef.Sha
+                };
+
+                newTreeItemList.Add(newTreeItem);
             }
+
+            return newTreeItemList;
         }
 
-        public async Task<string> Commit_Base64(string[] pathArray, VersionData versionData, Action<string> updateLabel, Action<float, float> updateProgress)
+        private async Task<string> CommitNewTreeItem(List<NewTreeItem> list, StringBuilder sb, Action<string> updateLabel, Action<float, float> updateProgress)
         {
             float awaitCount = 0;
-            float awaitMaxCount = 5 + pathArray.Length;
-
-            StringBuilder st = new StringBuilder();
-            st.Append("update data / ");
+            float awaitMaxCount = 5 + list.Count;
 
             try
             {
@@ -137,50 +176,16 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager
                     BaseTree = latestCommit.Tree.Sha
                 };
 
-                foreach (var path in pathArray)
+                foreach (var item in list)
                 {
-                    var fileName = Path.GetFileNameWithoutExtension(path);
-                    var fileExtension = Path.GetExtension(path);
-
-                    var curVersion = versionData.GetVersionValue(fileName);
-                    if (curVersion == null)
-                    {
-                        curVersion = versionData.AddNewVerionData(fileName);
-                    }
-                    var fileVersionName = versionData.GetNextVersion(fileName);
-
-                    var fileFullName = string.Format("{0}{1}", fileVersionName, fileExtension);
-
-                    fileExtension = fileExtension.Replace(".", "");
-
-                    var fileToBase64 = Convert.ToBase64String(File.ReadAllBytes(path));
-                    var newBlob = new NewBlob
-                    {
-                        Encoding = EncodingType.Base64,
-                        Content = fileToBase64
-                    };
-
-                    updateLabel?.Invoke(string.Format("Create {0} Blob Ref..", fileFullName));
-                    var newBlobRef = await Client.Git.Blob.Create(OwnerSpaceName, RepositoryName, newBlob);
-                    updateProgress?.Invoke(++awaitCount, awaitMaxCount);
-
-                    var newTreeItem = new NewTreeItem
-                    {
-                        Path = string.Format("{0}/{1}/{2}/{3}", BaseDataPath, fileExtension, fileName, fileFullName),
-                        Mode = "100644",
-                        Type = TreeType.Blob,
-                        Sha = newBlobRef.Sha
-                    };
-
-                    nt.Tree.Add(newTreeItem);
-                    st.AppendFormat(" {0} /", fileFullName);
+                    nt.Tree.Add(item);
                 }
 
                 updateLabel?.Invoke("Create New Tree..");
                 var newTree = await Client.Git.Tree.Create(OwnerSpaceName, RepositoryName, nt);
                 updateProgress?.Invoke(++awaitCount, awaitMaxCount);
 
-                var newCommit = new NewCommit(st.ToString(), newTree.Sha, masterReference.Object.Sha);
+                var newCommit = new NewCommit(sb.ToString(), newTree.Sha, masterReference.Object.Sha);
 
                 updateLabel?.Invoke("Create New Commit..");
                 var commit = await Client.Git.Commit.Create(OwnerSpaceName, RepositoryName, newCommit);

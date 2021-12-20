@@ -22,7 +22,8 @@
                 Foreground="White" Background="#FF252526" FontWeight="Bold"
                 Command="{Binding Path=ConnectCommand}" CommandParameter="{Binding ElementName=TextBox_Password}" Height="55" VerticalAlignment="Top"/>
 
-        <CheckBox Name="RememberCheckBox" Content="Remember Me" Margin="0,102,10,0" Foreground="White" VerticalAlignment="Top" Height="20" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" HorizontalAlignment="Right" Width="101"/>
 
+        <CheckBox Name="RememberCheckBox" Content="Remember Me" Margin="0,102,10,0" Foreground="White" VerticalAlignment="Top" Height="20" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" HorizontalAlignment="Right" Width="101"/>
+        <ComboBox Name="RepoTypeCombo" Margin="0,127,10,0" HorizontalAlignment="Right" Width="101" Height="20" VerticalAlignment="Top" SelectionChanged="RepoTypeCombo_SelectionChanged" SelectedIndex="0" />
     </Grid>
 </Window>

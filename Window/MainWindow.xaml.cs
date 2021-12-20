@@ -1,5 +1,4 @@
-﻿using Excel_To_SQLite_WPF.GitRespositoryManager;
-using ExcelDataReader;
+﻿using ExcelDataReader;
 using Microsoft.Win32;
 using SQLite;
 using System;
@@ -71,7 +70,7 @@ namespace Excel_To_SQLite_WPF
             this.DataContext = this;
             this.Loaded += (sender, e) =>
             {
-                UserName = RespositoryManager.GetManager().GetUserName;
+                UserName = Repository.RepositoryManager.GetManager().GetUserName;
             };
         }
 
@@ -144,7 +143,7 @@ namespace Excel_To_SQLite_WPF
                                 string createTableQuery = string.Empty;
 
                                 int fieldCount = 0;
-                                string[] fieldName = null;                                
+                                string[] fieldName = null;
 
                                 insertQuery.Clear();
 
@@ -164,17 +163,17 @@ namespace Excel_To_SQLite_WPF
 
                                     //필드 이름 세팅
                                     if (reader.Depth == 0)
-                                    {                                        
+                                    {
                                         //필드 검증 (데이터가 없는데 필드로 잡힌 경우가 있었음..)
                                         for (int i = 0; i < reader.FieldCount; i++)
                                         {
                                             if (reader.GetString(i) != null)
                                             {
                                                 fieldCount++;
-                                            }                                            
+                                            }
                                         }
 
-                                        fieldName = new string[fieldCount];                                        
+                                        fieldName = new string[fieldCount];
                                         for (int i = 0; i < fieldCount; i++)
                                         {
                                             fieldName[i] = reader.GetString(i);
@@ -288,7 +287,7 @@ namespace Excel_To_SQLite_WPF
         private void ExecuteCreateTable(SQLiteConnection conn, string dbName, string createTableHolders)
         {
             Label = string.Format("Create {0} Table", dbName);
-            
+
             var sql = string.Format("CREATE TABLE {0} ({1})", dbName, createTableHolders);
             var command = new SQLiteCommand(conn)
             {
@@ -327,7 +326,7 @@ namespace Excel_To_SQLite_WPF
             {
                 loadingCount++;
                 CurrentProgress = (int)((loadingCount / loadingCountMax) * 100.0f);
-            }                        
+            }
         }
 
         private void ExecuteInsertQuery(SQLiteConnection conn, string dbName, List<string> insertQuery)
@@ -342,7 +341,7 @@ namespace Excel_To_SQLite_WPF
                     CommandText = sql
                 };
 
-                var result = command.ExecuteNonQuery();
+                command.ExecuteNonQuery();
 
                 loadingCount++;
                 CurrentProgress = (int)((loadingCount / loadingCountMax) * 100.0f);
@@ -406,9 +405,9 @@ namespace Excel_To_SQLite_WPF
                 return;
 
             if (isWorking)
-                return;            
+                return;
 
-            var instance = RespositoryManager.GetManager();
+            var instance = Repository.RepositoryManager.GetManager();
             if (instance.IsGetUserSuccess)
             {
                 StartWork("Upload Start!");
@@ -445,7 +444,7 @@ namespace Excel_To_SQLite_WPF
 
             ErrorLabel = string.Empty;
 
-            var instance = RespositoryManager.GetManager();
+            var instance = Repository.RepositoryManager.GetManager();
             if (instance.IsGetUserSuccess)
             {
                 StartWork("Clear Start!");
