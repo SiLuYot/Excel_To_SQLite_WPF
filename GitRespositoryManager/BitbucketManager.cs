@@ -142,11 +142,13 @@ namespace Excel_To_SQLite_WPF.Repository
             return versionData;
         }
 
-        public override async Task<string> CommitProcess(string[] excelFileArray, string[] dbFileArray, VersionData versionData, Action<string> updateLabel, Action<float, float> updateProgress)
+        public override async Task<string> CommitProcess(string[] excelArray, string[] dbArray, VersionData versionData, Action<string> updateLabel, Action<float, float> updateProgress)
         {
+            var pathArray = excelArray.Concat(dbArray).ToArray();
+
             InitCommitList();
-            CreateUploadCommit(excelFileArray, versionData);
-            CreateUploadCommit(dbFileArray, versionData);
+            
+            CreateUploadCommit(pathArray, versionData);
             CreateVersionCommit(versionData);
 
             return await PushCommit(3, RequestUploadFileCommit, updateLabel, updateProgress);
@@ -179,7 +181,7 @@ namespace Excel_To_SQLite_WPF.Repository
             byte[] strByte = Encoding.UTF8.GetBytes(versionData.ToString());
             var uploadFileObject = new UploadFileObject(VersionDataPath, "version.txt", strByte);
 
-            CommitObjectList.Add(new CommitObject("update version data", new List<UploadFileObject>() { uploadFileObject }));
+            CommitObjectList.Add(new CommitObject("Update version", new List<UploadFileObject>() { uploadFileObject }));
         }
 
         public void CreateUploadCommit(string[] pathArray, VersionData versionData)
@@ -187,7 +189,7 @@ namespace Excel_To_SQLite_WPF.Repository
             var uploadFileObjectList = new List<UploadFileObject>();
 
             var st = new StringBuilder();
-            st.Append("update data ");
+            st.Append("[Update Data] ");
 
             foreach (var path in pathArray)
             {
@@ -288,7 +290,7 @@ namespace Excel_To_SQLite_WPF.Repository
                 }
             }
 
-            CommitObjectList.Add(new CommitObject("clear old data", removeFileObjectList));
+            CommitObjectList.Add(new CommitObject("[Clear Old Data]", removeFileObjectList));
         }
 
         public async Task<string> PushCommit(int basicAwaitCount,

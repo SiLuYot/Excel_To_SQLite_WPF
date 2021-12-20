@@ -79,7 +79,6 @@ namespace Excel_To_SQLite_WPF.Repository
             var sb = new StringBuilder();
 
             var pathArray = excelArray.Concat(dbArray);
-
             var newTreeItemList = await CreateNewTreeItemList(sb, pathArray, versionData);
 
             return await CommitNewTreeItem(newTreeItemList, sb, updateLabel, updateProgress);
