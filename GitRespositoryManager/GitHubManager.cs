@@ -26,13 +26,13 @@ namespace Excel_To_SQLite_WPF.Repository
         public override string OwnerSpaceName => "SiLuYot";
         public override string RepositoryName => "my_data_repository";
 
-        public override async Task<string> GetCurrentUser(string id, string password)
+        public override async Task<string> GetCurrentUser(string token, string id, string password)
         {
             //Deprecating password authentication
             //https://developer.github.com/changes/2020-02-14-deprecating-password-auth/
             //var newCredentials = new Credentials(string id, string password);
 
-            var newCredentials = new Credentials("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");
+            var newCredentials = new Credentials(token);
             Client.Credentials = newCredentials;
 
             try

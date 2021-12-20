@@ -58,7 +58,7 @@ namespace Excel_To_SQLite_WPF.Repository
         //repository name / repository slug
         public abstract string RepositoryName { get; }
 
-        public abstract Task<string> GetCurrentUser(string id, string password);
+        public abstract Task<string> GetCurrentUser(string token, string id, string password);
 
         public abstract Task<VersionData> GetVersionFile(string[] fileArray, Action<string> updateLabel);
 

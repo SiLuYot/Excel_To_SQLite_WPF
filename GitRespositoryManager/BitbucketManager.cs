@@ -81,7 +81,7 @@ namespace Excel_To_SQLite_WPF.Repository
         public override string OwnerSpaceName => "siluyot";
         public override string RepositoryName => "test";
 
-        public override async Task<string> GetCurrentUser(string id, string password)
+        public override async Task<string> GetCurrentUser(string token, string id, string password)
         {
             //비트버킷 계정이 구글계정 혹은 
             //다른 사이트인 경우 비밀번호 재설정 필요

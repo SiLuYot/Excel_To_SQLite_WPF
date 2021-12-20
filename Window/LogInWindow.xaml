@@ -8,20 +8,23 @@
         Title="LogIn" Height="195.833" Width="324.667" ResizeMode="CanMinimize" Foreground="#FF2D2D30">
     <Grid Background="#FF2D2D30">
 
-        <Label Content="ID" HorizontalAlignment="Left" Margin="15,26,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White"/>
-        <Label Content="Password" HorizontalAlignment="Left" Margin="15,57,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White"/>
+        <Label Content="Personal access tokens" HorizontalAlignment="Left" Margin="15,20,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Visibility="{Binding GithubContentEnable}" Width="209"/>
+        <TextBox Name="Token_ID" HorizontalAlignment="Left" Height="37" Margin="20,44,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="204"
+                 Text="{Binding Token}" Foreground="White" Background="#FF1E1E1E" Visibility="{Binding GithubContentEnable}"/>
+
+        <Label Content="ID" HorizontalAlignment="Left" Margin="15,26,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Visibility="{Binding BitbucketContentEnable}"/>
+        <Label Content="Password" HorizontalAlignment="Left" Margin="15,57,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Visibility="{Binding BitbucketContentEnable}"/>
 
         <TextBlock Text="{Binding Info}" Margin="15,102,116,10" TextWrapping="Wrap" Foreground="White" FontSize="14" Background="#FF3E3E42" TextDecorations="{x:Null}"/>
 
         <TextBox Name="TextBox_ID" HorizontalAlignment="Left" Height="23" Margin="89,26,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="135"
-                 Text="{Binding ID}" Foreground="White" Background="#FF1E1E1E"/>
+                 Text="{Binding ID}" Foreground="White" Background="#FF1E1E1E" Visibility="{Binding BitbucketContentEnable}"/>
 
-        <PasswordBox Name="TextBox_Password" KeyDown="TextBox_Password_KeyDown" HorizontalAlignment="Left" Margin="89,57,0,0" VerticalAlignment="Top" Width="135" Height="24" Background="#FF1E1E1E" Foreground="White" FontSize="11"/>
+        <PasswordBox Name="TextBox_Password" KeyDown="TextBox_Password_KeyDown" HorizontalAlignment="Left" Margin="89,57,0,0" VerticalAlignment="Top" Width="135" Height="24" Background="#FF1E1E1E" Foreground="White" FontSize="11" Visibility="{Binding BitbucketContentEnable}"/>
 
         <Button Name="ConnectButton" Content="Connect" Margin="236,26,10,0" 
                 Foreground="White" Background="#FF252526" FontWeight="Bold"
                 Command="{Binding Path=ConnectCommand}" CommandParameter="{Binding ElementName=TextBox_Password}" Height="55" VerticalAlignment="Top"/>
-
 
         <CheckBox Name="RememberCheckBox" Content="Remember Me" Margin="0,102,10,0" Foreground="White" VerticalAlignment="Top" Height="20" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" HorizontalAlignment="Right" Width="101"/>
         <ComboBox Name="RepoTypeCombo" Margin="0,127,10,0" HorizontalAlignment="Right" Width="101" Height="20" VerticalAlignment="Top" SelectionChanged="RepoTypeCombo_SelectionChanged" SelectedIndex="0" />
