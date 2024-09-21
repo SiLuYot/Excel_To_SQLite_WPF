@@ -80,14 +80,12 @@ namespace Excel_To_SQLite_WPF.Repository
 
         public override string OwnerSpaceName => "siluyot";
         public override string RepositoryName => "test";
+        public string BranchName => "main";
 
-        public override async Task<string> GetCurrentUser(string token, string id, string password)
+        public override async Task<string> GetCurrentUser(string token, string id, string appPassword)
         {
-            //비트버킷 계정이 구글계정 혹은 
-            //다른 사이트인 경우 비밀번호 재설정 필요
-            //https://community.atlassian.com/t5/Bitbucket-questions/REST-API-authentication-with-Google-Account/qaq-p/1497836
-
-            Client.Authenticator = new HttpBasicAuthenticator(id, password);
+            //https://bitbucket.org/account/settings/app-passwords/
+            Client.Authenticator = new HttpBasicAuthenticator(id, appPassword);
 
             try
             {
@@ -118,7 +116,7 @@ namespace Excel_To_SQLite_WPF.Repository
 
             try
             {
-                updateLabel?.Invoke("Get Master Branches..");
+                updateLabel?.Invoke("Get Branch Hash..");
                 await RequestUpdateHash();
 
                 updateLabel?.Invoke("Check Version Data..");
@@ -147,7 +145,7 @@ namespace Excel_To_SQLite_WPF.Repository
             var pathArray = excelArray.Concat(dbArray).ToArray();
 
             InitCommitList();
-            
+
             CreateUploadCommit(pathArray, versionData);
             CreateVersionCommit(versionData);
 
@@ -304,7 +302,7 @@ namespace Excel_To_SQLite_WPF.Repository
 
             try
             {
-                updateLabel?.Invoke("Get Master Branches..");
+                updateLabel?.Invoke("Get Branch Hash..");
                 await RequestUpdateHash();
                 updateProgress?.Invoke(++awaitCount, awaitMaxCount);
 
@@ -356,7 +354,7 @@ namespace Excel_To_SQLite_WPF.Repository
 
         public async Task RequestUpdateHash()
         {
-            var request = new RestRequest(string.Format("repositories/{0}/{1}/refs/branches/master", OwnerSpaceName, RepositoryName));
+            var request = new RestRequest(string.Format("repositories/{0}/{1}/refs/branches/{2}", OwnerSpaceName, RepositoryName, BranchName));
             var response = await Client.ExecuteAsync(request);
 
             string branchJson = response.Content;
@@ -385,7 +383,7 @@ namespace Excel_To_SQLite_WPF.Repository
             request.AddParameter("message", sb.ToString());
             request.AddParameter("author", string.Format("{0} <{1}>", userName, email));
             request.AddParameter("parents", hash);
-            request.AddParameter("branch", "master");
+            request.AddParameter("branch", BranchName);
 
             foreach (var obj in uploadFileObjectList)
             {
@@ -429,7 +427,7 @@ namespace Excel_To_SQLite_WPF.Repository
             request.AddParameter("message", sb.ToString());
             request.AddParameter("author", string.Format("{0} <{1}>", userName, email));
             request.AddParameter("parents", hash);
-            request.AddParameter("branch", "master");
+            request.AddParameter("branch", BranchName);
 
             foreach (var obj in removeFileObjectList)
             {
