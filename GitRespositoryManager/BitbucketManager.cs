@@ -140,13 +140,13 @@ namespace Excel_To_SQLite_WPF.Repository
             return versionData;
         }
 
-        public override async Task<string> CommitProcess(string[] excelArray, string[] dbArray, VersionData versionData, Action<string> updateLabel, Action<float, float> updateProgress)
+        public override async Task<string> CommitProcess(string[] excelPaths, string[] filePaths, VersionData versionData, Action<string> updateLabel, Action<float, float> updateProgress)
         {
-            var pathArray = excelArray.Concat(dbArray).ToArray();
+            var paths = excelPaths.Concat(filePaths).ToArray();
 
             InitCommitList();
 
-            CreateUploadCommit(pathArray, versionData);
+            CreateUploadCommit(paths, versionData);
             CreateVersionCommit(versionData);
 
             return await PushCommit(3, RequestUploadFileCommit, updateLabel, updateProgress);
@@ -182,14 +182,14 @@ namespace Excel_To_SQLite_WPF.Repository
             CommitObjectList.Add(new CommitObject("Update version", new List<UploadFileObject>() { uploadFileObject }));
         }
 
-        public void CreateUploadCommit(string[] pathArray, VersionData versionData)
+        public void CreateUploadCommit(string[] dataPaths, VersionData versionData)
         {
             var uploadFileObjectList = new List<UploadFileObject>();
 
-            var st = new StringBuilder();
-            st.Append("[Update Data] ");
+            var sb = new StringBuilder();
+            sb.Append("[Update Data] ");
 
-            foreach (var path in pathArray)
+            foreach (var path in dataPaths)
             {
                 var fileName = Path.GetFileNameWithoutExtension(path);
                 var fileExtension = Path.GetExtension(path);
@@ -199,20 +199,27 @@ namespace Excel_To_SQLite_WPF.Repository
                     versionData.AddNewVerionData(fileName);
                 }
 
-                var fileVersionName = versionData.GetNextVersion(fileName);
-                var fileFullName = string.Format("{0}{1}", fileVersionName, fileExtension);
-
-                fileExtension = fileExtension.Replace(".", "");
-
+                var fullPath = string.Empty;
+                var fileFullName = string.Empty;
                 var byteArray = File.ReadAllBytes(path);
-                var fullPath = string.Format("{0}/{1}/{2}/{3}", BaseDataPath, fileExtension, fileName, fileFullName);
+
+                if (fileExtension == ".cs")
+                {
+                    fileFullName = string.Format("{0}{1}", fileName, fileExtension);
+                    fullPath = string.Format("{0}/{1}{2}", CodeBaseDataPath, fileName, fileExtension);
+                }
+                else
+                {
+                    var fileVersionName = versionData.GetNextVersion(fileName);
+                    fileFullName = string.Format("{0}{1}", fileVersionName, fileExtension);
+                    fullPath = string.Format("{0}/{1}/{2}/{3}", BaseDataPath, fileExtension.Replace(".", ""), fileName, fileFullName);
+                }
 
                 uploadFileObjectList.Add(new UploadFileObject(fullPath, fileFullName, byteArray));
-
-                st.AppendFormat(" {0}, ", fileFullName);
+                sb.AppendFormat(" {0}, ", fileFullName);
             }
 
-            CommitObjectList.Add(new CommitObject(st.ToString(), uploadFileObjectList));
+            CommitObjectList.Add(new CommitObject(sb.ToString(), uploadFileObjectList));
         }
 
         private async Task<string[]> GetDataDirectory()

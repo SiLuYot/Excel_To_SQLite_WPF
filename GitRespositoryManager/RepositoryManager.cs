@@ -34,6 +34,17 @@ namespace Excel_To_SQLite_WPF.Repository
             }
         }
 
+        protected string CodeBaseDataPath
+        {
+            get
+            {
+                if (isUnity)
+                    return "Assets/Scripts/" + DataDirectoryName;
+                else
+                    return DataDirectoryName;
+            }
+        }
+
         protected string DataDirectoryName
         {
             get

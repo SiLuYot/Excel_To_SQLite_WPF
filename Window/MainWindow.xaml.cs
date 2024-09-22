@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -62,7 +63,7 @@ namespace Excel_To_SQLite_WPF
         private float loadingCountMax = 0;
         private bool isWorking = false;
         private string[] excelFileArray = null;
-        private List<string> dbFileList = new List<string>();
+        private List<string> fileList = new List<string>();
 
         public MainWindow()
         {
@@ -107,9 +108,11 @@ namespace Excel_To_SQLite_WPF
             StartWork("Excel To SQLite Start!");
 
             SQLiteConnection conn = null;
-            dbFileList.Clear();
+            fileList.Clear();
 
-            var dbPath = GetDirectoryPath();
+            var dbPath = GetDirectoryPath("db");
+            var codePath = GetDirectoryPath("code");
+
             foreach (var path in excelFileArray)
             {
                 try
@@ -118,7 +121,7 @@ namespace Excel_To_SQLite_WPF
                     {
                         var fileName = Path.GetFileNameWithoutExtension(path);
                         var dbFilePath = string.Format("{0}/{1}.db", dbPath, fileName);
-                        dbFileList.Add(dbFilePath);
+                        fileList.Add(dbFilePath);
 
                         var options = new SQLiteConnectionString(dbFilePath,
                            SQLiteOpenFlags.Create |
@@ -153,6 +156,13 @@ namespace Excel_To_SQLite_WPF
                                     dbName = string.Format("{0}{1}", fileName, sheetCount);
                                 }
 
+                                var codeFullPath = $"{codePath}/{dbName}.cs";
+                                var sb = new StringBuilder();
+                                sb.Append("namespace Excel_To_SQLite_WPF.Data\n{\n");
+                                sb.Append($"    public class {dbName}\n    {{\n");
+
+                                fileList.Add(codeFullPath);
+
                                 while (reader.Read())
                                 {
                                     //null이면 종료
@@ -185,6 +195,10 @@ namespace Excel_To_SQLite_WPF
                                         {
                                             //create table 쿼리 작성
                                             createTableQuery = GetCreateTableQuery(reader, fieldName, fieldCount);
+
+                                            //데이터 클래스 작성
+                                            sb.Append(GetCreateCodeStr(reader, fieldName, fieldCount));
+
                                             loadingCount++;
                                         }
 
@@ -194,6 +208,7 @@ namespace Excel_To_SQLite_WPF
                                     }
                                 }
 
+                                sb.Append("\n}");
                                 loadingCountMax = loadingCount + 1;
                                 loadingCount = 0;
 
@@ -207,6 +222,9 @@ namespace Excel_To_SQLite_WPF
 
                                     //데이터 삽입 실행
                                     ExecuteInsertQuery(conn, dbName, insertQuery);
+
+                                    //데이터 클래스 생성
+                                    File.WriteAllText(codeFullPath, sb.ToString());
                                 });
 
                             } while (isMultiSheet.IsChecked.Value && reader.NextResult()); //다음 시트로 이동
@@ -219,7 +237,7 @@ namespace Excel_To_SQLite_WPF
                 catch (Exception e)
                 {
                     ErrorLabel = e.Message;
-                    dbFileList.Clear();
+                    fileList.Clear();
                     isWorking = false;
                     return;
                 }
@@ -231,9 +249,9 @@ namespace Excel_To_SQLite_WPF
             EndWork("Excel To SQLite Done!");
         }
 
-        private string GetDirectoryPath()
+        private string GetDirectoryPath(string path)
         {
-            var dbPath = string.Format("{0}/db", Directory.GetCurrentDirectory());
+            var dbPath = string.Format("{0}/{1}", Directory.GetCurrentDirectory(), path);
 
             var di = new DirectoryInfo(dbPath);
             if (!di.Exists)
@@ -261,11 +279,34 @@ namespace Excel_To_SQLite_WPF
                     //예외 알림 처리 필요
                 }
 
-                var type = GetValueType(value);
+                var type = GetTableValueType(value);
                 query = string.Concat(query, string.Format("{0} {1} NOT NULL", fieldName[i], type));
             }
 
             return query;
+        }
+
+        private string GetCreateCodeStr(IExcelDataReader reader, string[] fieldName, int fieldCount)
+        {
+            string str = string.Empty;
+
+            for (int i = 0; i < fieldCount; i++)
+            {
+                var value = reader.GetValue(i);
+                if (value == null)
+                {
+                    //예외 알림 처리 필요
+                }
+
+                var type = GetPropertyValueType(value);
+                var name = fieldName[i];
+                var newName = name.Substring(0, 1).ToUpper() + name.Substring(1);
+
+                str += $"        public {type} {newName} {{ get; set; }}\n";
+            }
+
+            str += "    }";
+            return str;
         }
 
         private string GetInsertQuery(IExcelDataReader reader, int fieldCount)
@@ -348,7 +389,7 @@ namespace Excel_To_SQLite_WPF
             }
         }
 
-        private string GetValueType(object value)
+        private string GetTableValueType(object value)
         {
             if (value != null)
             {
@@ -366,6 +407,26 @@ namespace Excel_To_SQLite_WPF
             }
 
             return "TEXT";
+        }
+
+        private string GetPropertyValueType(object value)
+        {
+            if (value != null)
+            {
+                int intParse = 0;
+                if (int.TryParse(value.ToString(), out intParse))
+                {
+                    return "int";
+                }
+
+                float floatParse = 0;
+                if (float.TryParse(value.ToString(), out floatParse))
+                {
+                    return "float";
+                }
+            }
+
+            return "string";
         }
 
         private void OpenButtonClick(object sender, RoutedEventArgs e)
@@ -401,7 +462,7 @@ namespace Excel_To_SQLite_WPF
             if (excelFileArray == null)
                 return;
 
-            if (dbFileList.Count <= 0)
+            if (fileList.Count <= 0)
                 return;
 
             if (isWorking)
@@ -420,7 +481,7 @@ namespace Excel_To_SQLite_WPF
                 var versionData = await instance.GetVersionFile(excelFileArray, updateLabel);
 
                 var msg = await instance.CommitProcess(
-                    excelFileArray, dbFileList.ToArray(),
+                    excelFileArray, fileList.ToArray(),
                     versionData, updateLabel, updateProgress);
 
                 if (msg != string.Empty)
