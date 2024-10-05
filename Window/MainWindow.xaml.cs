@@ -159,7 +159,7 @@ namespace Excel_To_SQLite_WPF
                                 var codeFullPath = $"{codePath}/{dbName}.cs";
                                 var sb = new StringBuilder();
                                 sb.Append("namespace Excel_To_SQLite_WPF.Data\n{\n");
-                                sb.Append($"    public class {dbName}\n    {{\n");
+                                sb.Append($"    public class {dbName} : ICustomData\n    {{\n");
 
                                 fileList.Add(codeFullPath);
 
@@ -197,7 +197,7 @@ namespace Excel_To_SQLite_WPF
                                             createTableQuery = GetCreateTableQuery(reader, fieldName, fieldCount);
 
                                             //데이터 클래스 작성
-                                            sb.Append(GetCreateCodeStr(reader, fieldName, fieldCount));
+                                            sb.Append(GetCreateCodeStr(reader, dbName, fieldName, fieldCount));
 
                                             loadingCount++;
                                         }
@@ -286,27 +286,57 @@ namespace Excel_To_SQLite_WPF
             return query;
         }
 
-        private string GetCreateCodeStr(IExcelDataReader reader, string[] fieldName, int fieldCount)
+        private string GetCreateCodeStr(IExcelDataReader reader, string dbName, string[] fieldName, int fieldCount)
         {
-            string str = string.Empty;
-
+            var sb = new StringBuilder();
             for (int i = 0; i < fieldCount; i++)
             {
                 var value = reader.GetValue(i);
                 if (value == null)
                 {
-                    //예외 알림 처리 필요
+                    //TODO : 예외 알림 처리 필요
+                    continue;
                 }
 
-                var type = GetPropertyValueType(value);
-                var name = fieldName[i];
-                var newName = name.Substring(0, 1).ToUpper() + name.Substring(1);
-
-                str += $"        public {type} {newName} {{ get; set; }}\n";
+                sb.AppendLine($"        public {GetPropertyValueType(value)} {fieldName[i]} {{ get; set; }}");
             }
 
-            str += "    }";
-            return str;
+            sb.AppendLine($"\n        public {dbName}() {{ }}");
+
+            sb.Append($"\n        public {dbName}(");
+            for (int i = 0; i < fieldCount; i++)
+            {
+                var value = reader.GetValue(i);
+                if (value == null)
+                {
+                    //TODO : 예외 알림 처리 필요
+                    continue;
+                }
+
+                sb.Append($"{GetPropertyValueType(value)} {fieldName[i]}");
+
+                if (i != fieldCount - 1)
+                    sb.Append($", ");
+                else
+                    sb.AppendLine($")");
+            }
+
+            sb.AppendLine("        {");
+            for (int i = 0; i < fieldCount; i++)
+            {
+                var value = reader.GetValue(i);
+                if (value == null)
+                {
+                    //TODO : 예외 알림 처리 필요
+                    continue;
+                }
+
+                sb.AppendLine($"            this.{fieldName[i]} = {fieldName[i]};");
+            }
+            sb.AppendLine("        }");
+
+            sb.Append("    }");
+            return sb.ToString();
         }
 
         private string GetInsertQuery(IExcelDataReader reader, int fieldCount)
