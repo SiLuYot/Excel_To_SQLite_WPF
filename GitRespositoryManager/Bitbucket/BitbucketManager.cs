@@ -93,22 +93,15 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager.Bitbucket
                 var fileName = Path.GetFileNameWithoutExtension(path);
                 var fileExtension = Path.GetExtension(path);
 
+                var fileFullName = string.Format("{0}{1}", fileName, fileExtension);
                 var fullPath = string.Empty;
-                var fileFullName = string.Empty;
-                var byteArray = File.ReadAllBytes(path);
 
                 if (fileExtension == ".cs")
-                {
-                    fileFullName = string.Format("{0}{1}", fileName, fileExtension);
-                    fullPath = string.Format("{0}/{1}{2}", CodePath, fileName, fileExtension);
-                }
+                    fullPath = string.Format("{0}/{1}", CodePath, fileFullName);
                 else
-                {
-                    fileFullName = string.Format("{0}{1}", fileName, fileExtension);
-                    fullPath = string.Format("{0}/{1}/{2}/{3}", DataPath, fileExtension.Replace(".", ""), fileName, fileFullName);
-                }
+                    fullPath = string.Format("{0}/{1}/{2}", DataPath, fileExtension.Replace(".", ""), fileFullName);
 
-                uploadFileObjects.Add(new UploadFileObject(fullPath, fileFullName, byteArray));
+                uploadFileObjects.Add(new UploadFileObject(fullPath, fileFullName, File.ReadAllBytes(path)));
                 sb.AppendFormat(" {0}, ", fileFullName);
             }
 

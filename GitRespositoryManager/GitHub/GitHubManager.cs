@@ -74,9 +74,14 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager.GitHub
             {
                 var fileName = Path.GetFileNameWithoutExtension(path);
                 var fileExtension = Path.GetExtension(path);
-                var fileFullName = string.Format("{0}{1}", fileName, fileExtension);
 
-                fileExtension = fileExtension.Replace(".", "");
+                var fileFullName = string.Format("{0}{1}", fileName, fileExtension);
+                var fullPath = string.Empty;
+
+                if (fileExtension == ".cs")
+                    fullPath = string.Format("{0}/{1}", CodePath, fileFullName);
+                else
+                    fullPath = string.Format("{0}/{1}/{2}", DataPath, fileExtension.Replace(".", ""), fileFullName);
 
                 var fileToBase64 = Convert.ToBase64String(File.ReadAllBytes(path));
                 var newBlob = new NewBlob
@@ -86,10 +91,9 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager.GitHub
                 };
 
                 var newBlobRef = await _client.Git.Blob.Create(OwnerSpaceName, RepositoryName, newBlob);
-
                 var newTreeItem = new NewTreeItem
                 {
-                    Path = string.Format("{0}/{1}/{2}/{3}", DataPath, fileExtension, fileName, fileFullName),
+                    Path = fullPath,
                     Mode = "100644",
                     Type = TreeType.Blob,
                     Sha = newBlobRef.Sha
