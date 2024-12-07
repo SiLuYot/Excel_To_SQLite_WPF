@@ -23,7 +23,7 @@ namespace Excel_To_SQLite_WPF.Repository
             this.isUnity = isUnity;
         }
 
-        protected string BaseDataPath
+        protected string DataPath
         {
             get
             {
@@ -34,7 +34,7 @@ namespace Excel_To_SQLite_WPF.Repository
             }
         }
 
-        protected string CodeBaseDataPath
+        protected string CodePath
         {
             get
             {
@@ -45,21 +45,7 @@ namespace Excel_To_SQLite_WPF.Repository
             }
         }
 
-        protected string DataDirectoryName
-        {
-            get
-            {
-                return RepositoryName + "_data";
-            }
-        }
-
-        protected string VersionDataPath
-        {
-            get
-            {
-                return BaseDataPath + "/version.txt";
-            }
-        }
+        protected string DataDirectoryName => RepositoryName + "_data";
 
         public abstract bool IsGetUserSuccess { get; }
         public abstract string GetUserName { get; }
@@ -71,10 +57,6 @@ namespace Excel_To_SQLite_WPF.Repository
 
         public abstract Task<string> GetCurrentUser(string token, string id, string password);
 
-        public abstract Task<VersionData> GetVersionFile(string[] fileArray, Action<string> updateLabel);
-
-        public abstract Task<string> CommitProcess(string[] excelFileArray, string[] dbFileArray, VersionData versionData, Action<string> updateLabel, Action<float, float> updateProgress);
-
-        public abstract Task<string> ClearProcess(VersionData versionData, Action<string> updateLabel, Action<float, float> updateProgress);
+        public abstract Task<string> CommitProcess(string[] excelFileArray, string[] dbFileArray, Action<string> updateLabel, Action<float, float> updateProgress);
     }
 }

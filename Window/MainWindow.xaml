@@ -19,7 +19,6 @@
         <CheckBox Content="Use Unity" Margin="0,126,25,0" Name="isUnity" HorizontalAlignment="Right" Width="113" Height="21" VerticalAlignment="Top" Foreground="White" IsChecked="True"/>
         <CheckBox Content="Use Multi Sheet" Margin="0,147,25,0" Name="isMultiSheet" HorizontalAlignment="Right" Width="113" Height="21" VerticalAlignment="Top" Foreground="White"/>
 
-        <Button Content="Clear Old File" Margin="0,0,18,274" Click="ClearOldFileClick" Height="30" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="120" Background="#FF740000" Foreground="White" FontWeight="Bold"/>
         <Button Content="Open Excel File" Margin="0,0,18,212" Click="OpenButtonClick" Height="57" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="120" Background="#FF252526" Foreground="White" FontWeight="Bold"/>
         <Button Content="Excel to SQLite" Margin="0,0,18,150" Click="ExcelToSQLiteButtonClick" Height="57" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="120" Background="#FF252526" Foreground="White" FontWeight="Bold"/>
         <Button Content="Commit" Margin="0,0,18,88" Height="57" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="120" Click="UploadButtonClick" FontWeight="Bold" Background="#FF252526" Foreground="White"/>

@@ -1,4 +1,6 @@
-﻿using Excel_To_SQLite_WPF.Repository;
+﻿using Excel_To_SQLite_WPF.GitRespositoryManager.Bitbucket;
+using Excel_To_SQLite_WPF.GitRespositoryManager.GitHub;
+using Excel_To_SQLite_WPF.Repository;
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
@@ -130,9 +132,9 @@ namespace Excel_To_SQLite_WPF
 
                     var file = fileInfo.CreateText();
                     file.Write(
-                        ID + "/" + 
-                        password + "/" + 
-                        Token + "/" + 
+                        ID + "/" +
+                        password + "/" +
+                        Token + "/" +
                         RepoTypeCombo.SelectedIndex);
 
                     file.Close();
@@ -159,19 +161,23 @@ namespace Excel_To_SQLite_WPF
         {
             bool gitHubEnable = RepoTypeCombo.SelectedIndex == 0;
 
+            var ownerSpaceName = "siluyot";
+            var repositoryName = "test";
+            var branchName = "master";
+
             if (gitHubEnable)
             {
                 GithubContentEnable = Visibility.Visible;
                 BitbucketContentEnable = Visibility.Hidden;
 
-                RepositoryManager.SetManager(new GitHubManager());                
+                RepositoryManager.SetManager(new GitHubManager(ownerSpaceName, repositoryName, branchName));
             }
             else
             {
                 GithubContentEnable = Visibility.Hidden;
                 BitbucketContentEnable = Visibility.Visible;
 
-                RepositoryManager.SetManager(new BitbucketManager());
+                RepositoryManager.SetManager(new BitbucketManager(ownerSpaceName, repositoryName, branchName));
             }
 
             Info = string.Format(" {0}\n" + " {1}",

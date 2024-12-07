@@ -114,9 +114,12 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="GitRespositoryManager\BitbucketManager.cs" />
+    <Compile Include="GitRespositoryManager\Bitbucket\BitbucketManager.cs" />
     <Compile Include="Command.cs" />
-    <Compile Include="GitRespositoryManager\GitHubManager.cs" />
+    <Compile Include="GitRespositoryManager\Bitbucket\CommitObject.cs" />
+    <Compile Include="GitRespositoryManager\Bitbucket\RemoveFileObject.cs" />
+    <Compile Include="GitRespositoryManager\Bitbucket\UploadFileObject.cs" />
+    <Compile Include="GitRespositoryManager\GitHub\GitHubManager.cs" />
     <Compile Include="GitRespositoryManager\RepositoryManager.cs" />
     <Compile Include="Window\LogInWindow.xaml.cs">
       <DependentUpon>LogInWindow.xaml</DependentUpon>

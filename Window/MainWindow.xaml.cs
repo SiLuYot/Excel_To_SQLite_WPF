@@ -508,11 +508,11 @@ namespace Excel_To_SQLite_WPF
 
                 instance.SetUnityPath(isUnity.IsChecked.Value);
 
-                var versionData = await instance.GetVersionFile(excelFileArray, updateLabel);
-
                 var msg = await instance.CommitProcess(
-                    excelFileArray, fileList.ToArray(),
-                    versionData, updateLabel, updateProgress);
+                    excelFileArray, 
+                    fileList.ToArray(),
+                    updateLabel, 
+                    updateProgress);
 
                 if (msg != string.Empty)
                 {
@@ -521,41 +521,6 @@ namespace Excel_To_SQLite_WPF
                 }
 
                 EndWork("Upload Done!");
-            }
-        }
-
-        private async void ClearOldFileClick(object sender, RoutedEventArgs e)
-        {
-            if (isWorking)
-                return;
-
-            var result = MessageBox.Show("이 기능을 실행하면 최신버전 이외의 데이터들이 모두 삭제됩니다.\n진행하시겠습니까?", "경고", MessageBoxButton.YesNo);
-            if (!(result == MessageBoxResult.Yes))
-                return;
-
-            ErrorLabel = string.Empty;
-
-            var instance = Repository.RepositoryManager.GetManager();
-            if (instance.IsGetUserSuccess)
-            {
-                StartWork("Clear Start!");
-
-                Action<string> updateLabel = (str) => Label = str;
-                Action<float, float> updateProgress = (v1, v2) => CurrentProgress = (int)((v1 / v2) * 100.0f);
-
-                instance.SetUnityPath(isUnity.IsChecked.Value);
-
-                var versionData = await instance.GetVersionFile(excelFileArray, updateLabel);
-
-                var msg = await instance.ClearProcess(versionData, updateLabel, updateProgress);
-
-                if (msg != string.Empty)
-                {
-                    ErrorLabel = msg;
-                    MessageBox.Show(this, "clear error", "", MessageBoxButton.OK);
-                }
-
-                EndWork("Clear Done!");
             }
         }
     }
