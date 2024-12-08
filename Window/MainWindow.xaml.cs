@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -146,7 +147,7 @@ namespace Excel_To_SQLite_WPF
                                 string createTableQuery = string.Empty;
 
                                 int fieldCount = 0;
-                                string[] fieldName = null;
+                                string[] fieldNames = null;
 
                                 insertQuery.Clear();
 
@@ -157,11 +158,13 @@ namespace Excel_To_SQLite_WPF
                                 }
 
                                 var codeFullPath = $"{codePath}/{dbName}.cs";
-                                var sb = new StringBuilder();
-                                sb.Append("namespace Excel_To_SQLite_WPF.Data\n{\n");
-                                sb.Append($"    public class {dbName} : ICustomData\n    {{\n");
-
                                 fileList.Add(codeFullPath);
+
+                                var classSb = new StringBuilder();
+                                classSb.Append("namespace Excel_To_SQLite_WPF.Data\n{\n");
+                                classSb.Append($"    public class {dbName} : ICustomData\n    {{\n");
+
+                                var enumDic = new Dictionary<string, string>();
 
                                 while (reader.Read())
                                 {
@@ -183,10 +186,10 @@ namespace Excel_To_SQLite_WPF
                                             }
                                         }
 
-                                        fieldName = new string[fieldCount];
+                                        fieldNames = new string[fieldCount];
                                         for (int i = 0; i < fieldCount; i++)
                                         {
-                                            fieldName[i] = reader.GetString(i);
+                                            fieldNames[i] = reader.GetString(i);
                                         }
                                     }
                                     else
@@ -194,21 +197,49 @@ namespace Excel_To_SQLite_WPF
                                         if (createTableQuery == string.Empty)
                                         {
                                             //create table 쿼리 작성
-                                            createTableQuery = GetCreateTableQuery(reader, fieldName, fieldCount);
+                                            createTableQuery = GetCreateTableQuery(reader, dbName, fieldNames, fieldCount);
 
                                             //데이터 클래스 작성
-                                            sb.Append(GetCreateCodeStr(reader, dbName, fieldName, fieldCount));
+                                            classSb.Append(GetCreateCodeStr(reader, dbName, fieldNames, fieldCount));
+
+                                            //Enum 작성 시작
+                                            enumDic = GetCreateEnumStr(reader, dbName, fieldNames, fieldCount);
 
                                             loadingCount++;
                                         }
 
                                         //insert 쿼리 작성                                    
                                         insertQuery.Add(GetInsertQuery(reader, fieldCount));
+
+                                        //Enum 내용 작성
+                                        SetEnumStr(reader, dbName, fieldNames, fieldCount, enumDic);
+
                                         loadingCount++;
                                     }
                                 }
 
-                                sb.Append("\n}");
+                                if (enumDic.Count > 0)
+                                {
+                                    var enumSb = new StringBuilder();
+
+                                    foreach (var key in enumDic.Keys.ToArray())
+                                    {
+                                        enumSb.Append(enumDic[key]);
+                                        enumSb.AppendLine($"    }}");
+
+                                        enumDic[key] = enumSb.ToString();
+                                        enumSb.Clear();
+                                    }
+
+                                    classSb.AppendLine();
+                                    foreach (var value in enumDic.Values)
+                                    {
+                                        classSb.Append($"\n{value}");
+                                    }
+                                }
+
+                                classSb.Append("\n}");
+
                                 loadingCountMax = loadingCount + 1;
                                 loadingCount = 0;
 
@@ -224,7 +255,7 @@ namespace Excel_To_SQLite_WPF
                                     ExecuteInsertQuery(conn, dbName, insertQuery);
 
                                     //데이터 클래스 생성
-                                    File.WriteAllText(codeFullPath, sb.ToString());
+                                    File.WriteAllText(codeFullPath, classSb.ToString());
                                 });
 
                             } while (isMultiSheet.IsChecked.Value && reader.NextResult()); //다음 시트로 이동
@@ -262,7 +293,7 @@ namespace Excel_To_SQLite_WPF
             return dbPath;
         }
 
-        private string GetCreateTableQuery(IExcelDataReader reader, string[] fieldName, int fieldCount)
+        private string GetCreateTableQuery(IExcelDataReader reader, string dbName, string[] fieldNames, int fieldCount)
         {
             string query = string.Empty;
 
@@ -273,32 +304,120 @@ namespace Excel_To_SQLite_WPF
                     query = string.Concat(query, ", ");
                 }
 
-                var value = reader.GetValue(i);
-                if (value == null)
+                var split = fieldNames[i].Split(':');
+                if (split.Length != 2)
                 {
-                    //예외 알림 처리 필요
+                    Label = $"Invaild field - dbName:{dbName} fieldName:{fieldNames[i]}";
+                    return string.Empty;
                 }
 
+                var fieldName = split[0];
+
+                var value = reader.GetValue(i);
                 var type = GetTableValueType(value);
-                query = string.Concat(query, string.Format("{0} {1} NOT NULL", fieldName[i], type));
+
+                query = string.Concat(query, string.Format("{0} {1} NOT NULL", fieldName, type));
             }
 
             return query;
         }
 
-        private string GetCreateCodeStr(IExcelDataReader reader, string dbName, string[] fieldName, int fieldCount)
+        private Dictionary<string, string> GetCreateEnumStr(IExcelDataReader reader, string dbName, string[] fieldNames, int fieldCount)
         {
             var sb = new StringBuilder();
+            var dic = new Dictionary<string, string>();
+
             for (int i = 0; i < fieldCount; i++)
             {
-                var value = reader.GetValue(i);
-                if (value == null)
+                var split = fieldNames[i].Split(':');
+                if (split.Length != 2)
                 {
-                    //TODO : 예외 알림 처리 필요
-                    continue;
+                    Label = $"Invaild field - dbName:{dbName} fieldName:{fieldNames[i]}";
+                    return null;
                 }
 
-                sb.AppendLine($"        public {GetPropertyValueType(value)} {fieldName[i]} {{ get; set; }}");
+                var fieldName = split[0];
+                var fieldType = split[1];
+
+                if (fieldType == "enum")
+                {
+                    var upperFieldName = string.Empty;
+
+                    var fieldNameSplit = fieldName.Split('_');
+                    if (fieldNameSplit.Length > 1)
+                    {
+                        foreach (var item in fieldNameSplit)
+                        {
+                            upperFieldName += $"{item.Substring(0, 1).ToUpper()}{item.Substring(1)}";
+                        }
+                    }
+                    else
+                    {
+                        upperFieldName = $"{fieldName.Substring(0, 1).ToUpper()}{fieldName.Substring(1)}";
+                    }
+
+                    sb.Append($"    public enum {upperFieldName}\n    {{\n");
+                    dic.Add(fieldNames[i], sb.ToString());
+                }
+
+                sb.Clear();
+            }
+
+            return dic;
+        }
+
+        private void SetEnumStr(IExcelDataReader reader, string dbName, string[] fieldNames, int fieldCount, Dictionary<string, string> dic)
+        {
+            var sb = new StringBuilder();
+
+            for (int i = 0; i < fieldCount; i++)
+            {
+                if (dic.TryGetValue(fieldNames[i], out var str))
+                {
+                    sb.Append(str);
+                    sb.AppendLine($"        {reader.GetValue(i)},");
+
+                    dic[fieldNames[i]] = sb.ToString();
+                    sb.Clear();
+                }
+            }
+        }
+
+        private string GetCreateCodeStr(IExcelDataReader reader, string dbName, string[] fieldNames, int fieldCount)
+        {
+            var sb = new StringBuilder();
+
+            for (int i = 0; i < fieldCount; i++)
+            {
+                var split = fieldNames[i].Split(':');
+                if (split.Length != 2)
+                {
+                    Label = $"Invaild field - dbName:{dbName} fieldName:{fieldNames[i]}";
+                    return string.Empty;
+                }
+
+                var fieldName = split[0];
+                var fieldType = split[1];
+
+                var upperFieldName = string.Empty;
+
+                var fieldNameSplit = fieldName.Split('_');
+                if (fieldNameSplit.Length > 1)
+                {
+                    foreach (var item in fieldNameSplit)
+                    {
+                        upperFieldName += $"{item.Substring(0, 1).ToUpper()}{item.Substring(1)}";
+                    }
+                }
+                else
+                {
+                    upperFieldName = $"{fieldName.Substring(0, 1).ToUpper()}{fieldName.Substring(1)}";
+                }
+
+                if (fieldType == "enum")
+                    fieldType = upperFieldName;
+
+                sb.AppendLine($"        public readonly {fieldType} {upperFieldName};");
             }
 
             sb.AppendLine($"\n        public {dbName}() {{ }}");
@@ -306,14 +425,32 @@ namespace Excel_To_SQLite_WPF
             sb.Append($"\n        public {dbName}(");
             for (int i = 0; i < fieldCount; i++)
             {
-                var value = reader.GetValue(i);
-                if (value == null)
+                var split = fieldNames[i].Split(':');
+
+                var fieldName = split[0];
+                var fieldType = split[1];
+
+                if (fieldType == "enum")
                 {
-                    //TODO : 예외 알림 처리 필요
-                    continue;
+                    var upperFieldName = string.Empty;
+
+                    var fieldNameSplit = fieldName.Split('_');
+                    if (fieldNameSplit.Length > 1)
+                    {
+                        foreach (var item in fieldNameSplit)
+                        {
+                            upperFieldName += $"{item.Substring(0, 1).ToUpper()}{item.Substring(1)}";
+                        }
+                    }
+                    else
+                    {
+                        upperFieldName = $"{fieldName.Substring(0, 1).ToUpper()}{fieldName.Substring(1)}";
+                    }
+
+                    fieldType = upperFieldName;
                 }
 
-                sb.Append($"{GetPropertyValueType(value)} {fieldName[i]}");
+                sb.Append($"{fieldType} {fieldName}");
 
                 if (i != fieldCount - 1)
                     sb.Append($", ");
@@ -324,14 +461,27 @@ namespace Excel_To_SQLite_WPF
             sb.AppendLine("        {");
             for (int i = 0; i < fieldCount; i++)
             {
-                var value = reader.GetValue(i);
-                if (value == null)
+                var split = fieldNames[i].Split(':');
+
+                var fieldName = split[0];
+                var fieldType = split[1];
+
+                var upperFieldName = string.Empty;
+
+                var fieldNameSplit = fieldName.Split('_');
+                if (fieldNameSplit.Length > 1)
                 {
-                    //TODO : 예외 알림 처리 필요
-                    continue;
+                    foreach (var item in fieldNameSplit)
+                    {
+                        upperFieldName += $"{item.Substring(0, 1).ToUpper()}{item.Substring(1)}";
+                    }
+                }
+                else
+                {
+                    upperFieldName = $"{fieldName.Substring(0, 1).ToUpper()}{fieldName.Substring(1)}";
                 }
 
-                sb.AppendLine($"            this.{fieldName[i]} = {fieldName[i]};");
+                sb.AppendLine($"            {upperFieldName} = {fieldName};");
             }
             sb.AppendLine("        }");
 
@@ -439,26 +589,6 @@ namespace Excel_To_SQLite_WPF
             return "TEXT";
         }
 
-        private string GetPropertyValueType(object value)
-        {
-            if (value != null)
-            {
-                int intParse = 0;
-                if (int.TryParse(value.ToString(), out intParse))
-                {
-                    return "int";
-                }
-
-                float floatParse = 0;
-                if (float.TryParse(value.ToString(), out floatParse))
-                {
-                    return "float";
-                }
-            }
-
-            return "string";
-        }
-
         private void OpenButtonClick(object sender, RoutedEventArgs e)
         {
             if (isWorking)
@@ -509,9 +639,9 @@ namespace Excel_To_SQLite_WPF
                 instance.SetUnityPath(isUnity.IsChecked.Value);
 
                 var msg = await instance.CommitProcess(
-                    excelFileArray, 
+                    excelFileArray,
                     fileList.ToArray(),
-                    updateLabel, 
+                    updateLabel,
                     updateProgress);
 
                 if (msg != string.Empty)
