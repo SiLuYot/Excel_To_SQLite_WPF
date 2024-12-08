@@ -341,22 +341,7 @@ namespace Excel_To_SQLite_WPF
 
                 if (fieldType == "enum")
                 {
-                    var upperFieldName = string.Empty;
-
-                    var fieldNameSplit = fieldName.Split('_');
-                    if (fieldNameSplit.Length > 1)
-                    {
-                        foreach (var item in fieldNameSplit)
-                        {
-                            upperFieldName += $"{item.Substring(0, 1).ToUpper()}{item.Substring(1)}";
-                        }
-                    }
-                    else
-                    {
-                        upperFieldName = $"{fieldName.Substring(0, 1).ToUpper()}{fieldName.Substring(1)}";
-                    }
-
-                    sb.Append($"    public enum {upperFieldName}\n    {{\n");
+                    sb.Append($"    public enum {fieldName}\n    {{\n");
                     dic.Add(fieldNames[i], sb.ToString());
                 }
 
@@ -399,25 +384,10 @@ namespace Excel_To_SQLite_WPF
                 var fieldName = split[0];
                 var fieldType = split[1];
 
-                var upperFieldName = string.Empty;
-
-                var fieldNameSplit = fieldName.Split('_');
-                if (fieldNameSplit.Length > 1)
-                {
-                    foreach (var item in fieldNameSplit)
-                    {
-                        upperFieldName += $"{item.Substring(0, 1).ToUpper()}{item.Substring(1)}";
-                    }
-                }
-                else
-                {
-                    upperFieldName = $"{fieldName.Substring(0, 1).ToUpper()}{fieldName.Substring(1)}";
-                }
-
                 if (fieldType == "enum")
-                    fieldType = upperFieldName;
+                    fieldType = fieldName;
 
-                sb.AppendLine($"        public readonly {fieldType} {upperFieldName};");
+                sb.AppendLine($"        public {fieldType} {fieldName} {{ get; set; }}");
             }
 
             sb.AppendLine($"\n        public {dbName}() {{ }}");
@@ -431,24 +401,7 @@ namespace Excel_To_SQLite_WPF
                 var fieldType = split[1];
 
                 if (fieldType == "enum")
-                {
-                    var upperFieldName = string.Empty;
-
-                    var fieldNameSplit = fieldName.Split('_');
-                    if (fieldNameSplit.Length > 1)
-                    {
-                        foreach (var item in fieldNameSplit)
-                        {
-                            upperFieldName += $"{item.Substring(0, 1).ToUpper()}{item.Substring(1)}";
-                        }
-                    }
-                    else
-                    {
-                        upperFieldName = $"{fieldName.Substring(0, 1).ToUpper()}{fieldName.Substring(1)}";
-                    }
-
-                    fieldType = upperFieldName;
-                }
+                    fieldType = fieldName;
 
                 sb.Append($"{fieldType} {fieldName}");
 
@@ -466,22 +419,7 @@ namespace Excel_To_SQLite_WPF
                 var fieldName = split[0];
                 var fieldType = split[1];
 
-                var upperFieldName = string.Empty;
-
-                var fieldNameSplit = fieldName.Split('_');
-                if (fieldNameSplit.Length > 1)
-                {
-                    foreach (var item in fieldNameSplit)
-                    {
-                        upperFieldName += $"{item.Substring(0, 1).ToUpper()}{item.Substring(1)}";
-                    }
-                }
-                else
-                {
-                    upperFieldName = $"{fieldName.Substring(0, 1).ToUpper()}{fieldName.Substring(1)}";
-                }
-
-                sb.AppendLine($"            {upperFieldName} = {fieldName};");
+                sb.AppendLine($"            this.{fieldName} = {fieldName};");
             }
             sb.AppendLine("        }");
 
