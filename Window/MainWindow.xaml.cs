@@ -359,8 +359,12 @@ namespace Excel_To_SQLite_WPF
             {
                 if (dic.TryGetValue(fieldNames[i], out var str))
                 {
+                    var enumValue = reader.GetValue(i).ToString();
+                    if (str.Contains(enumValue))
+                        continue;
+
                     sb.Append(str);
-                    sb.AppendLine($"        {reader.GetValue(i)},");
+                    sb.AppendLine($"        {enumValue},");
 
                     dic[fieldNames[i]] = sb.ToString();
                     sb.Clear();
