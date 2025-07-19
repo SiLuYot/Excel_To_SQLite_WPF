@@ -36,8 +36,6 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager.Bitbucket
 
         public BitbucketManager(string ownerSpaceName, string repositoryName, string branchName)
         {
-            _client = new RestClient("https://api.bitbucket.org/2.0/");
-
             _ownerSpaceName = ownerSpaceName;
             _repositoryName = repositoryName;
             _branchName = branchName;
@@ -46,7 +44,11 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager.Bitbucket
         public override async Task<string> GetCurrentUser(string token, string id, string appPassword)
         {
             //https://bitbucket.org/account/settings/app-passwords/
-            _client.Authenticator = new HttpBasicAuthenticator(id, appPassword);
+            var clientOptions = new RestClientOptions("https://api.bitbucket.org/2.0/")
+            {
+                Authenticator = new HttpBasicAuthenticator(id, appPassword)
+            };
+            _client = new RestClient(clientOptions);
 
             try
             {
@@ -200,7 +202,7 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager.Bitbucket
             }
 
             var request = new RestRequest(string.Format("repositories/{0}/{1}/src", OwnerSpaceName, RepositoryName));
-            request.Method = Method.POST;
+            request.Method = Method.Post;
             request.AddParameter("message", sb.ToString());
             request.AddParameter("author", string.Format("{0} <{1}>", _userName, _email));
             request.AddParameter("parents", _hash);
@@ -208,7 +210,7 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager.Bitbucket
 
             foreach (var obj in uploadFileObjectList)
             {
-                request.AddFileBytes(obj.path, obj.byteArray, obj.fileName, "multipart/form-data");
+                request.AddFile(obj.path, obj.byteArray, obj.fileName, "multipart/form-data");
             }
 
             updateLabel?.Invoke("Push..");
