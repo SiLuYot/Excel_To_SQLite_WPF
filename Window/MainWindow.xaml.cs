@@ -42,7 +42,7 @@ namespace Excel_To_SQLite_WPF
         {
             get { return _errorLabel; }
             set
-            { 
+            {
                 _errorLabel = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ErrorLabel)));
             }
@@ -53,7 +53,7 @@ namespace Excel_To_SQLite_WPF
         {
             get { return _userName; }
             set
-            { 
+            {
                 _userName = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UserName)));
             }
@@ -88,7 +88,7 @@ namespace Excel_To_SQLite_WPF
         }
 
         private void OpenButtonClick(object sender, RoutedEventArgs e)
-        { 
+        {
             if (_isWorking) return;
 
             var dialog = new OpenFileDialog
@@ -117,12 +117,15 @@ namespace Excel_To_SQLite_WPF
                 var dbPath = GetDirectoryPath("db");
                 var codePath = GetDirectoryPath("code");
 
+                var enumDic = new Dictionary<string, string>();
+
                 var codeGenerator = new CodeGenerator(codePath);
                 var dbManager = new DatabaseManager(dbPath);
                 var excelProcessor = new ExcelProcessor();
 
                 Repository.RepositoryManager.GetManager().SetUnityPath(isUnity.IsChecked == true);
 
+                UpdateLabel("Get Enums...");
                 var remoteEnumPath = $"{Repository.RepositoryManager.GetManager().CodePath}/Enums.cs";
                 var fileContent = await Repository.RepositoryManager.GetManager().GetFileContent(remoteEnumPath);
 
@@ -144,24 +147,38 @@ namespace Excel_To_SQLite_WPF
                             var enumName = match.Groups[1].Value.Trim();
                             var enumMembers = match.Groups[2].Value;
                             var key = $"{enumName}:enum";
-                            if (excelProcessor.EnumDic.ContainsKey(key)) continue;
+
+                            if (enumDic.ContainsKey(key))
+                                continue;
 
                             var valueBuilder = new System.Text.StringBuilder();
                             valueBuilder.AppendLine($"    public enum {enumName}");
                             valueBuilder.Append("    {");
                             valueBuilder.Append(enumMembers);
 
-                            excelProcessor.EnumDic.Add(key, valueBuilder.ToString());
+                            enumDic.Add(key, valueBuilder.ToString());
                         }
                     }
                 }
 
-                foreach (var path in _excelFileArray)
+                UpdateLabel($"Process...");
+
+                int count = 0;
+                var tasks = new List<Task>();
+
+                for (int i = 0; i < _excelFileArray.Length; i++)
                 {
-                    excelProcessor.Process(path, isMultiSheet.IsChecked == true, codeGenerator, dbManager);
+                    tasks.Add(excelProcessor.Process(
+                        _excelFileArray[i], 
+                        isMultiSheet.IsChecked == true, 
+                        enumDic, () => UpdateProgress(count++, _excelFileArray.Length), 
+                        codeGenerator, 
+                        dbManager));
                 }
 
-                codeGenerator.GenerateEnums(excelProcessor.EnumDic);
+                await Task.WhenAll(tasks);
+
+                codeGenerator.GenerateEnums(enumDic);
 
                 _fileList.Clear();
                 _fileList.AddRange(dbManager.GeneratedFilePaths);
@@ -186,16 +203,13 @@ namespace Excel_To_SQLite_WPF
             {
                 StartWork("Upload Start!");
 
-                Action<string> updateLabel = (str) => Label = str;
-                Action<float, float> updateProgress = (v1, v2) => CurrentProgress = (int)((v1 / v2) * 100.0f);
-
                 instance.SetUnityPath(isUnity.IsChecked == true);
 
                 var msg = await instance.CommitProcess(
                     _excelFileArray,
                     _fileList.ToArray(),
-                    updateLabel,
-                    updateProgress);
+                    UpdateLabel,
+                    UpdateProgress);
 
                 if (!string.IsNullOrEmpty(msg))
                 {
@@ -216,6 +230,16 @@ namespace Excel_To_SQLite_WPF
             }
 
             return fullPath;
+        }
+
+        private void UpdateLabel(string str)
+        {
+            Label = str;
+        }
+
+        private void UpdateProgress(float v1, float v2)
+        {
+            CurrentProgress = (int)((v1 / v2) * 100.0f);
         }
     }
 }

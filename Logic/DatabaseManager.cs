@@ -1,6 +1,7 @@
 using SQLite;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Excel_To_SQLite_WPF.Logic
 {
@@ -29,24 +30,27 @@ namespace Excel_To_SQLite_WPF.Logic
             return new SQLiteConnection(options);
         }
 
-        public void ExecuteQuery(SQLiteConnection conn, string dbName, string createTableQuery, List<string> insertQueries)
+        public async Task ExecuteQuery(SQLiteConnection conn, string dbName, string createTableQuery, List<string> insertQueries)
         {
-            try
+            await Task.Run(() =>
             {
-                conn.Execute($"CREATE TABLE {dbName} ({createTableQuery})");
-            }
-            catch
-            {
-                conn.Execute($"DROP TABLE {dbName}");
-                conn.Execute($"CREATE TABLE {dbName} ({createTableQuery})");
-            }
+                try
+                {
+                    conn.Execute($"CREATE TABLE {dbName} ({createTableQuery})");
+                }
+                catch
+                {
+                    conn.Execute($"DROP TABLE {dbName}");
+                    conn.Execute($"CREATE TABLE {dbName} ({createTableQuery})");
+                }
 
-            conn.Execute($"DELETE FROM {dbName}");
+                conn.Execute($"DELETE FROM {dbName}");
 
-            foreach (var query in insertQueries)
-            {
-                conn.Execute($"INSERT INTO {dbName} VALUES {query}");
-            }
+                foreach (var query in insertQueries)
+                {
+                    conn.Execute($"INSERT INTO {dbName} VALUES {query}");
+                }
+            });
         }
     }
 }

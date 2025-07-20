@@ -1,16 +1,16 @@
 using ExcelDataReader;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Excel_To_SQLite_WPF.Logic
 {
     public class ExcelProcessor
     {
-        public Dictionary<string, string> EnumDic { get; } = new Dictionary<string, string>();
-
-        public void Process(string path, bool isMultiSheet, CodeGenerator codeGenerator, DatabaseManager dbManager)
+        public async Task Process(string path, bool isMultiSheet, Dictionary<string, string> enumDic, Action executeQuery, CodeGenerator codeGenerator, DatabaseManager dbManager)
         {
             using (var stream = File.Open(path, FileMode.Open, FileAccess.Read))
             {
@@ -26,13 +26,23 @@ namespace Excel_To_SQLite_WPF.Logic
 
                         reader.Read();
 
-                        var fieldNames = new string[reader.FieldCount];
+                        int fieldCount = 0;
+
                         for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            if (reader.GetString(i) != null)
+                            {
+                                fieldCount++;
+                            }
+                        }
+
+                        var fieldNames = new string[fieldCount];
+                        for (int i = 0; i < fieldCount; i++)
                         {
                             fieldNames[i] = reader.GetString(i);
                         }
 
-                        var createTableQuery = GetCreateTableQuery(reader, dbName, fieldNames, reader.FieldCount);
+                        var createTableQuery = GetCreateTableQuery(reader, dbName, fieldNames, fieldCount);
                         var insertQueries = new List<string>();
 
                         while (reader.Read())
@@ -40,13 +50,14 @@ namespace Excel_To_SQLite_WPF.Logic
                             if (reader.IsDBNull(0))
                                 break;
 
-                            insertQueries.Add(GetInsertQuery(reader, fieldNames, reader.FieldCount));
-                            SetEnumStr(reader, dbName, fieldNames, reader.FieldCount, EnumDic);
+                            insertQueries.Add(GetInsertQuery(reader, fieldNames, fieldCount));
+                            SetEnumStr(reader, dbName, fieldNames, fieldCount, enumDic);
                         }
 
-                        GetCreateEnumStr(reader, dbName, fieldNames, reader.FieldCount, EnumDic);
-                        codeGenerator.Generate(dbName, fieldNames, reader.FieldCount, EnumDic, reader);
-                        dbManager.ExecuteQuery(conn, dbName, createTableQuery, insertQueries);
+                        GetCreateEnumStr(reader, dbName, fieldNames, fieldCount, enumDic);
+                        codeGenerator.Generate(dbName, fieldNames, fieldCount, enumDic, reader);
+
+                        await dbManager.ExecuteQuery(conn, dbName, createTableQuery, insertQueries);
 
                     } while (isMultiSheet && reader.NextResult());
 
@@ -54,6 +65,8 @@ namespace Excel_To_SQLite_WPF.Logic
                     conn.Dispose();
                 }
             }
+
+            executeQuery?.Invoke();
         }
 
         private string GetCreateTableQuery(IExcelDataReader reader, string dbName, string[] fieldNames, int fieldCount)
