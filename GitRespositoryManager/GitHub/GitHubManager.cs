@@ -55,6 +55,20 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager.GitHub
             return string.Empty;
         }
 
+        public override async Task<string> GetFileContent(string path)
+        {
+            try
+            {
+                var contents = await _client.Repository.Content.GetAllContentsByRef(OwnerSpaceName, RepositoryName, path, _branchName);
+                var file = contents.FirstOrDefault(c => c.Type == ContentType.File);
+                return file?.Content;
+            }
+            catch (Exception e)
+            {
+                return "ERROR:" + e.Message;
+            }
+        }
+
         public override async Task<string> CommitProcess(string[] excelArray, string[] dbArray, Action<string> updateLabel, Action<float, float> updateProgress)
         {
             var sb = new StringBuilder();

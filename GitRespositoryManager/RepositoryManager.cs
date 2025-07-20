@@ -23,7 +23,7 @@ namespace Excel_To_SQLite_WPF.Repository
             this.isUnity = isUnity;
         }
 
-        protected string DataPath
+        public string DataPath
         {
             get
             {
@@ -34,7 +34,7 @@ namespace Excel_To_SQLite_WPF.Repository
             }
         }
 
-        protected string CodePath
+        public string CodePath
         {
             get
             {
@@ -56,6 +56,8 @@ namespace Excel_To_SQLite_WPF.Repository
         public abstract string RepositoryName { get; }
 
         public abstract Task<string> GetCurrentUser(string token, string id, string password);
+
+        public abstract Task<string> GetFileContent(string path);
 
         public abstract Task<string> CommitProcess(string[] excelFileArray, string[] dbFileArray, Action<string> updateLabel, Action<float, float> updateProgress);
     }

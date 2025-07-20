@@ -81,6 +81,13 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager.Bitbucket
             return await PushCommit(3, RequestUploadFileCommit, updateLabel, updateProgress);
         }
 
+        public override async Task<string> GetFileContent(string path)
+        {
+            await RequestUpdateHash();
+            var content = await RequestFindFile(path);
+            return string.IsNullOrEmpty(content) ? null : content;
+        }
+
         public void CreateUploadCommit(string[] dataPaths)
         {
             _commitObjects.Clear();
@@ -222,14 +229,17 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager.Bitbucket
 
         public async Task<string> RequestFindFile(string path)
         {
-            var request = new RestRequest(string.Format("repositories/{0}/{1}/src/{2}/{3}", OwnerSpaceName, RepositoryName, _hash, path));
+            var request = new RestRequest(string.Format("repositories/{0}/{1}/src/{2}/{3}", OwnerSpaceName, RepositoryName, _branchName, path));
             var response = await _client.ExecuteAsync(request);
 
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 return response.Content;
             }
-            else return string.Empty;
+            else
+            {
+                return "ERROR:" + response.StatusDescription;
+            }
         }
     }
 }

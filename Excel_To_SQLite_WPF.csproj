@@ -136,6 +136,9 @@
     <Compile Include="GitRespositoryManager\Bitbucket\UploadFileObject.cs" />
     <Compile Include="GitRespositoryManager\GitHub\GitHubManager.cs" />
     <Compile Include="GitRespositoryManager\RepositoryManager.cs" />
+    <Compile Include="Logic\CodeGenerator.cs" />
+    <Compile Include="Logic\DatabaseManager.cs" />
+    <Compile Include="Logic\ExcelProcessor.cs" />
     <Compile Include="Window\LogInWindow.xaml.cs">
       <DependentUpon>LogInWindow.xaml</DependentUpon>
     </Compile>
