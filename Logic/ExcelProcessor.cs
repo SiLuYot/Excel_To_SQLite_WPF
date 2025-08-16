@@ -45,6 +45,8 @@ namespace Excel_To_SQLite_WPF.Logic
                         var createTableQuery = GetCreateTableQuery(reader, dbName, fieldNames, fieldCount);
                         var insertQueries = new List<string>();
 
+                        GetCreateEnumStr(reader, dbName, fieldNames, fieldCount, enumDic);
+
                         while (reader.Read())
                         {
                             if (reader.IsDBNull(0))
@@ -53,8 +55,7 @@ namespace Excel_To_SQLite_WPF.Logic
                             insertQueries.Add(GetInsertQuery(reader, fieldNames, fieldCount));
                             SetEnumStr(reader, dbName, fieldNames, fieldCount, enumDic);
                         }
-
-                        GetCreateEnumStr(reader, dbName, fieldNames, fieldCount, enumDic);
+                        
                         codeGenerator.Generate(dbName, fieldNames, fieldCount, enumDic, reader);
 
                         await dbManager.ExecuteQuery(conn, dbName, createTableQuery, insertQueries);
@@ -158,7 +159,7 @@ namespace Excel_To_SQLite_WPF.Logic
                     if (enumDic.ContainsKey(fieldNames[i]))
                         continue;
 
-                    sb.Append($"    public enum {fieldName}\n    {{\n");
+                    sb.AppendLine($"    public enum {fieldName}\n    {{");
                     enumDic.Add(fieldNames[i], sb.ToString());
                 }
 

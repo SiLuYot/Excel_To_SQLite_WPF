@@ -154,7 +154,7 @@ namespace Excel_To_SQLite_WPF
                             var valueBuilder = new System.Text.StringBuilder();
                             valueBuilder.AppendLine($"    public enum {enumName}");
                             valueBuilder.Append("    {");
-                            valueBuilder.Append(enumMembers);
+                            valueBuilder.AppendLine(enumMembers);
 
                             enumDic.Add(key, valueBuilder.ToString());
                         }
@@ -171,7 +171,8 @@ namespace Excel_To_SQLite_WPF
                     tasks.Add(excelProcessor.Process(
                         _excelFileArray[i], 
                         isMultiSheet.IsChecked == true, 
-                        enumDic, () => UpdateProgress(count++, _excelFileArray.Length), 
+                        enumDic, 
+                        () => UpdateProgress(count++, _excelFileArray.Length), 
                         codeGenerator, 
                         dbManager));
                 }

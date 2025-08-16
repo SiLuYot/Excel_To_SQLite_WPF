@@ -47,7 +47,7 @@ namespace Excel_To_SQLite_WPF.Logic
 
             foreach (var kv in enumDic)
             {
-                enumSb.AppendLine($"\n{kv.Value}");
+                enumSb.Append($"\n{kv.Value}");
                 enumSb.AppendLine($"    }}");
             }
 
