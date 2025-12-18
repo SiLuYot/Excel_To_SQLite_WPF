@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Excel_To_SQLite_WPF.Repository
@@ -60,5 +61,11 @@ namespace Excel_To_SQLite_WPF.Repository
         public abstract Task<string> GetFileContent(string path);
 
         public abstract Task<string> CommitProcess(string[] excelFileArray, string[] dbFileArray, Action<string> updateLabel, Action<float, float> updateProgress);
+
+        public abstract Task<List<string>> GetBranches();
+
+        public abstract string GetCurrentBranch();
+
+        public abstract void SetBranch(string branchName);
     }
 }

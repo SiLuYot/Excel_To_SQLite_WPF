@@ -2,6 +2,7 @@ using Excel_To_SQLite_WPF.Logic;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -59,6 +60,33 @@ namespace Excel_To_SQLite_WPF
             }
         }
 
+        private ObservableCollection<string> _branches = new ObservableCollection<string>();
+        public ObservableCollection<string> Branches
+        {
+            get { return _branches; }
+            set
+            {
+                _branches = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Branches)));
+            }
+        }
+
+        private string _selectedBranch;
+        public string SelectedBranch
+        {
+            get { return _selectedBranch; }
+            set
+            {
+                _selectedBranch = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedBranch)));
+
+                if (!string.IsNullOrEmpty(_selectedBranch))
+                {
+                    Repository.RepositoryManager.GetManager()?.SetBranch(_selectedBranch);
+                }
+            }
+        }
+
         private bool _isWorking = false;
         private string[] _excelFileArray = null;
         private List<string> _fileList = new List<string>();
@@ -67,10 +95,53 @@ namespace Excel_To_SQLite_WPF
         {
             InitializeComponent();
             DataContext = this;
-            Loaded += (sender, e) =>
+            Loaded += async (sender, e) =>
             {
-                UserName = Repository.RepositoryManager.GetManager()?.GetUserName;
+                var manager = Repository.RepositoryManager.GetManager();
+                UserName = manager?.GetUserName;
+
+                await LoadBranches();
             };
+        }
+
+        private async Task LoadBranches()
+        {
+            try
+            {
+                var manager = Repository.RepositoryManager.GetManager();
+                if (manager != null)
+                {
+                    var branches = await manager.GetBranches();
+                    Branches.Clear();
+
+                    foreach (var branch in branches)
+                    {
+                        Branches.Add(branch);
+                    }
+
+                    var currentBranch = manager.GetCurrentBranch();
+                    if (Branches.Contains(currentBranch))
+                    {
+                        SelectedBranch = currentBranch;
+                    }
+                    else if (Branches.Count > 0)
+                    {
+                        SelectedBranch = Branches[0];
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorLabel = "Failed to load branches: " + ex.Message;
+            }
+        }
+
+        private async void RefreshBranchesButtonClick(object sender, RoutedEventArgs e)
+        {
+            if (_isWorking)
+                return;
+
+            await LoadBranches();
         }
 
         private void StartWork(string msg)
@@ -169,11 +240,11 @@ namespace Excel_To_SQLite_WPF
                 for (int i = 0; i < _excelFileArray.Length; i++)
                 {
                     tasks.Add(excelProcessor.Process(
-                        _excelFileArray[i], 
-                        isMultiSheet.IsChecked == true, 
-                        enumDic, 
-                        () => UpdateProgress(count++, _excelFileArray.Length), 
-                        codeGenerator, 
+                        _excelFileArray[i],
+                        isMultiSheet.IsChecked == true,
+                        enumDic,
+                        () => UpdateProgress(count++, _excelFileArray.Length),
+                        codeGenerator,
                         dbManager));
                 }
 
@@ -202,7 +273,12 @@ namespace Excel_To_SQLite_WPF
             var instance = Repository.RepositoryManager.GetManager();
             if (instance.IsGetUserSuccess)
             {
-                StartWork("Upload Start!");
+                if (!string.IsNullOrEmpty(SelectedBranch))
+                {
+                    instance.SetBranch(SelectedBranch);
+                }
+
+                StartWork($"Upload Start! (Branch: {SelectedBranch})");
 
                 instance.SetUnityPath(isUnity.IsChecked == true);
 

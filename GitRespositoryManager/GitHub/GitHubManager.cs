@@ -79,6 +79,29 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager.GitHub
             return await CommitNewTreeItem(newTreeItemList, sb, updateLabel, updateProgress);
         }
 
+        public override async Task<List<string>> GetBranches()
+        {
+            try
+            {
+                var branches = await _client.Repository.Branch.GetAll(OwnerSpaceName, RepositoryName);
+                return branches.Select(b => b.Name).ToList();
+            }
+            catch (Exception)
+            {
+                return new List<string>();
+            }
+        }
+
+        public override string GetCurrentBranch()
+        {
+            return _branchName;
+        }
+
+        public override void SetBranch(string branchName)
+        {
+            _branchName = branchName;
+        }
+
         private async Task<List<NewTreeItem>> CreateNewTreeItemList(StringBuilder sb, IEnumerable<string> pathArray)
         {
             var newTreeItemList = new List<NewTreeItem>();
@@ -127,7 +150,7 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager.GitHub
 
             try
             {
-                updateLabel?.Invoke("Get Master Reference..");
+                updateLabel?.Invoke("Get Branch Reference..");
                 var masterReference = await _client.Git.Reference.Get(OwnerSpaceName, RepositoryName, ReferenceName);
                 updateProgress?.Invoke(++awaitCount, awaitMaxCount);
 

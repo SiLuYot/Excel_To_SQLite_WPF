@@ -84,8 +84,49 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager.Bitbucket
         public override async Task<string> GetFileContent(string path)
         {
             await RequestUpdateHash();
+
             var content = await RequestFindFile(path);
             return string.IsNullOrEmpty(content) ? null : content;
+        }
+
+        public override async Task<List<string>> GetBranches()
+        {
+            try
+            {
+                var request = new RestRequest(string.Format("repositories/{0}/{1}/refs/branches", OwnerSpaceName, RepositoryName));
+                var response = await _client.ExecuteAsync(request);
+
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    var jObject = JObject.Parse(response.Content);
+                    var jArray = JArray.Parse(jObject["values"].ToString());
+
+                    var branches = new List<string>();
+                    foreach (var item in jArray)
+                    {
+                        branches.Add(item["name"].ToString());
+                    }
+                    return branches;
+                }
+                else
+                {
+                    return new List<string>();
+                }
+            }
+            catch (Exception)
+            {
+                return new List<string>();
+            }
+        }
+
+        public override string GetCurrentBranch()
+        {
+            return _branchName;
+        }
+
+        public override void SetBranch(string branchName)
+        {
+            _branchName = branchName;
         }
 
         public void CreateUploadCommit(string[] dataPaths)
@@ -184,7 +225,8 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager.Bitbucket
 
         public async Task RequestUpdateHash()
         {
-            var request = new RestRequest(string.Format("repositories/{0}/{1}/refs/branches/{2}", OwnerSpaceName, RepositoryName, _branchName));
+            var encodedBranch = Uri.EscapeDataString(_branchName);
+            var request = new RestRequest(string.Format("repositories/{0}/{1}/refs/branches/{2}", OwnerSpaceName, RepositoryName, encodedBranch));
             var response = await _client.ExecuteAsync(request);
 
             string branchJson = response.Content;
@@ -229,7 +271,12 @@ namespace Excel_To_SQLite_WPF.GitRespositoryManager.Bitbucket
 
         public async Task<string> RequestFindFile(string path)
         {
-            var request = new RestRequest(string.Format("repositories/{0}/{1}/src/{2}/{3}", OwnerSpaceName, RepositoryName, _branchName, path));
+            if (string.IsNullOrEmpty(_hash))
+            {
+                return "ERROR: Branch hash not found";
+            }
+
+            var request = new RestRequest(string.Format("repositories/{0}/{1}/src/{2}/{3}", OwnerSpaceName, RepositoryName, _hash, path));
             var response = await _client.ExecuteAsync(request);
 
             if (response.StatusCode == HttpStatusCode.OK)
