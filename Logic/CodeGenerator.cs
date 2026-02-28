@@ -26,7 +26,7 @@ namespace Excel_To_SQLite_WPF.Logic
             classSb.Append("using Newtonsoft.Json;\n");
             classSb.Append("using System.Collections.Generic;\n\n");
             classSb.Append("namespace Excel_To_SQLite_WPF.Data\n{\n");
-            classSb.Append($"    public class {dbName} : ICustomData\n    {{\n");
+            classSb.Append($"    public partial class {dbName} : ICustomData\n    {{\n");
             classSb.Append(GetCreateCodeStr(reader, dbName, fieldNames, fieldCount));
             classSb.Append("\n    }");
             classSb.Append("\n}");
